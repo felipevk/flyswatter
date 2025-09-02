@@ -1,4 +1,4 @@
-.PHONY: db-up db-down db-create-test test
+.PHONY: db-up db-down db-create-test test psql-dev psql-test
 
 db-up:
 	docker compose up -d db
@@ -15,3 +15,9 @@ db-create-test: db-up
 test: db-up
 	# load .env.test into the environment and run pytest from host
 	ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
+
+psql:
+	docker compose exec db bash -lc 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+
+psql-test:
+	docker compose exec db bash -lc 'psql -U app -d appdb_test'
