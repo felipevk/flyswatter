@@ -3,8 +3,9 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db.base import Base  # your declarative Base
+from app.core.config import settings
 
-TEST_DB_URL = os.getenv("DATABASE_URL")
+TEST_DB_URL = settings.database_url
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_schema():

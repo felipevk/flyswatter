@@ -3,6 +3,8 @@ services:
     build: .
     ports: ["8000:8000"]
     env_file: .env
+    environment:
+      APP_ENV: "docker"
     volumes:
       # This is a bind mount, and it has 3 parts separated by :
       # ./app is the source from your machine where the code lives
