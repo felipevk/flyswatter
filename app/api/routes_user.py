@@ -5,9 +5,19 @@ from typing import Annotated
 from .dto import UserCreate
 from sqlalchemy import select, insert
 from app.db.models import User
-from app.core.security import verify_password, get_password_hash
+from app.core.security import verify_password, get_password_hash, create_access_token, Token
 
 router = APIRouter(tags=["user"])
+
+def authenticate_user(username: str, password: str):
+    with SessionLocal() as session:
+        userQuery = select(User).where(User.username == username)
+        userDB = session.execute(userQuery).scalars().first()
+        if not userDB:
+            return False
+        if not verify_password(password, userDB.pass_hash):
+            return False
+        return userDB
 
 @router.post("/createuser")
 def create_user(createReq : UserCreate):
@@ -37,4 +47,12 @@ def create_user(createReq : UserCreate):
         session.commit()
     return {"status": "User Created with Success"}
 
-
+@router.post("/token")
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
+    userDB = authenticate_user(form_data.username, form_data.password)
+    if not userDB:
+            raise HTTPException(status_code=400, detail="Incorrect username or password")
+    access_token = create_access_token(
+        data={"sub": userDB.username}
+    )
+    return Token(access_token=access_token, token_type="bearer")
