@@ -7,5 +7,12 @@ class UserCreate(BaseModel):
     password: str
 
 class UserEdit(UserCreate):
-    admin: bool
-    disabled:bool
+    admin: bool = False
+    disabled: bool = False
+
+class UserRead(BaseModel):
+    username: str
+    email: str
+    full_name: str | None = None
+    admin: bool = False
+    disabled: bool = False

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.db.session import engine, SessionLocal
 from typing import Annotated
-from .dto import UserCreate, UserEdit
+from .dto import UserCreate, UserEdit, UserRead
 from sqlalchemy import select, insert, update
 from app.db.models import User
 from app.core.security import verify_password, get_password_hash, create_access_token, get_token_payload, Token
@@ -119,3 +119,16 @@ async def delete_user(editReq: UserEdit, current_user: Annotated[User, Depends(g
         userDB.admin = editReq.admin
         session.commit()
     return {"status": "User edited with success"}
+
+@router.get("/user/{username}")
+async def read_user(username: str, current_user: Annotated[User, Depends(get_current_active_user)]):
+    userDB = get_user(username)
+    if not userDB:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username not found",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    return UserRead(
+        email=userDB.email,username=userDB.username,full_name=userDB.name,admin=userDB.admin,disabled=userDB.disabled
+        )
