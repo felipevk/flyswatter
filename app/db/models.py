@@ -106,8 +106,8 @@ class Issue(Base):
     assign_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     project:Mapped["Project"] = relationship(back_populates="issues")
-    author: Mapped["User"] = relationship(back_populates="created_issues")
-    assigned: Mapped["User"] = relationship(back_populates="assigned_issues")
+    author: Mapped["User"] = relationship(back_populates="created_issues", foreign_keys=[author_id])
+    assigned: Mapped["User"] = relationship(back_populates="assigned_issues", foreign_keys=[assign_id])
     comments: Mapped[List["Comment"]] = relationship(back_populates="issue")
 
 class Comment(Base):
