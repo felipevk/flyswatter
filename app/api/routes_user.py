@@ -37,7 +37,7 @@ def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_
     session.commit()
     return {"status": "User Created with Success"}
 
-@router.post("/token")
+@router.post("/token", response_model = Token)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Annotated[Session, Depends(get_session)]) -> Token:
@@ -86,7 +86,7 @@ async def edit_user(
     session.commit()
     return {"status": "User edited with success"}
 
-@router.get("/user/{username}")
+@router.get("/user/{username}", response_model = UserRead)
 async def read_user(
     username: str, 
     current_user: Annotated[User, Depends(get_current_active_user)],

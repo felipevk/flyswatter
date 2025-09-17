@@ -41,7 +41,7 @@ async def read_project(
         headers={"WWW-Authenticate": "Bearer"}
         )
     projectQuery = select(Project).where(
-        Project.key == key and Project.author_id == authorDb.id
+        Project.key == key and Project.user_id == authorDb.id
         )
     projectDB = session.execute(projectQuery).scalars().first()
     if not projectDB:
@@ -75,7 +75,7 @@ async def edit_project(
         headers={"WWW-Authenticate": "Bearer"}
         )
     projectQuery = select(Project).where(
-        Project.key == key and Project.author_id == currAuthorDb.id
+        Project.key == key and Project.user_id == currAuthorDb.id
         )
     projectDB = session.execute(projectQuery).scalars().first()
     if not projectDB:
@@ -90,3 +90,19 @@ async def edit_project(
 
     session.commit()
     return {"status": "Project edited with success"}
+
+@router.get("/project/mine", response_model = list[ProjectRead])
+async def read_user_projects(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_session)]) -> list[ProjectRead]:
+    projectQuery = select(Project).where(
+        Project.user_id == current_user.id
+        )
+    projectsDB = session.execute(projectQuery).scalars()
+    myProjects = []
+    for project in projectsDB:
+        myProjects.append(
+            ProjectRead(title=project.title,key=project.key,author=current_user.username)
+            )
+    
+    return myProjects
