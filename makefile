@@ -2,7 +2,7 @@ DB_SERVICE ?= db
 API_SERVICE ?= api
 TEST_DB ?= appdb_test
 
-.PHONY: db-up db-down db-create-test test psql-dev psql-test migrate-dev revision
+.PHONY: db-up db-down db-create-test test psql-dev psql-test migrate-dev migrate-base-dev revision
 
 db-up:
 	docker compose up -d db
@@ -29,6 +29,9 @@ psql-test:
 migrate-dev:
 	poetry run alembic upgrade head
 
+migrate-base-dev:
+	poetry run alembic downgrade base
+
 revision:
 	# make revision msg="Updated user table"
-	poetry run alembic revision -m "$(msg)"
+	poetry run alembic revision --autogenerate -m "$(msg)"

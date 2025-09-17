@@ -17,7 +17,14 @@ def build_db_url() -> str:
     driver = os.getenv("DB_DRIVER", "")
     return f"{driver}://{user}:{pwd}@{host}:{port}/{db}"
 
+class AuthSettings(BaseModel):
+    jwtAlg: str = os.getenv("JWT_ALG", "")
+    jwtSecret: str = os.getenv("JWT_SECRET", "")
+    accessTTL: int = int(os.getenv("ACCESS_TTL_MIN", ""))
+    refreshTTL: int = int(os.getenv("REFRESH_TTL_DAYS", ""))
+
 class Settings(BaseModel):
     database_url: str = build_db_url()
+    auth: AuthSettings =  AuthSettings()
 
 settings = Settings()
