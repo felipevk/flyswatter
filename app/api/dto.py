@@ -16,3 +16,13 @@ class UserRead(BaseModel):
     full_name: str | None = None
     admin: bool = False
     disabled: bool = False
+
+class ProjectCreate(BaseModel):
+    title: str
+    key: str
+
+class ProjectRead(ProjectCreate):
+    author: str
+
+class ProjectEdit(ProjectRead):
+    pass

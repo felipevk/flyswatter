@@ -11,6 +11,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Will return session at first time it's driven by fastapi
 # and it will call it again once the endpoint returns
+# Additionally, any other functions that has this as a dependency will share the same cached session
 def get_session() -> Session:
     session = SessionLocal()
     try:
@@ -58,6 +59,6 @@ async def get_current_active_user(
 async def require_admin(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    if current_user.admin:
+    if not current_user.admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User requires admin access")
     return current_user

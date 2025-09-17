@@ -10,7 +10,7 @@ from .routes_common import *
 
 router = APIRouter(tags=["user"])
 
-@router.post("/createuser")
+@router.post("/user/create")
 def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_session)]):
     usernameQuery = select(User).where(User.username == createReq.username)
     emailQuery = select(User).where(User.email == createReq.email)
@@ -49,7 +49,7 @@ async def login(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/deleteuser/{username}")
+@router.post("/user/delete/{username}")
 async def delete_user(
     username: str, 
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -65,8 +65,8 @@ async def delete_user(
         session.commit()
     return {"status": "User Deleted"}
 
-@router.post("/edituser")
-async def delete_user(
+@router.post("/user/edit")
+async def edit_user(
     editReq: UserEdit, 
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)]):
@@ -90,7 +90,7 @@ async def delete_user(
 async def read_user(
     username: str, 
     current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_session)]):
+    session: Annotated[Session, Depends(get_session)]) -> UserRead:
     userDB = get_user(username, session)
     if not userDB:
         raise HTTPException(
