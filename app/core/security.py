@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import jwt
 from .config import settings
 from datetime import datetime, timedelta, timezone
+from jwt.exceptions import InvalidTokenError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,3 +24,9 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.auth.jwtSecret, algorithm=settings.auth.jwtAlg)
     return encoded_jwt
+
+def get_token_payload(token):
+    try:
+        return jwt.decode(token, settings.auth.jwtSecret, algorithms=[settings.auth.jwtAlg])
+    except InvalidTokenError:
+        return False

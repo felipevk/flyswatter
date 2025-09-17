@@ -5,19 +5,27 @@ from typing import Annotated
 from .dto import UserCreate
 from sqlalchemy import select, insert
 from app.db.models import User
-from app.core.security import verify_password, get_password_hash, create_access_token, Token
+from app.core.security import verify_password, get_password_hash, create_access_token, get_token_payload, Token
 
 router = APIRouter(tags=["user"])
 
-def authenticate_user(username: str, password: str):
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_user(username: str) -> User:
     with SessionLocal() as session:
         userQuery = select(User).where(User.username == username)
         userDB = session.execute(userQuery).scalars().first()
         if not userDB:
             return False
-        if not verify_password(password, userDB.pass_hash):
-            return False
         return userDB
+
+def authenticate_user(username: str, password: str):
+    userDB = get_user(username)
+    if not userDB:
+            return False
+    if not verify_password(password, userDB.pass_hash):
+            return False
+    return userDB
 
 @router.post("/createuser")
 def create_user(createReq : UserCreate):
@@ -56,3 +64,39 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
         data={"sub": userDB.username}
     )
     return Token(access_token=access_token, token_type="bearer")
+
+def get_user_from_token(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    payload = get_token_payload(token)
+    if not payload:
+        raise credentials_exception
+    username = payload.get("sub")
+    user = get_user(username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_user_from_token)],
+):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+@router.post("/deleteuser/{username}")
+async def delete_user(username: str, current_user: Annotated[User, Depends(get_current_active_user)]):
+    with SessionLocal() as session:
+        userDB = get_user(username)
+        if not userDB:
+            raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username not found",
+            headers={"WWW-Authenticate": "Bearer"}
+            )
+        session.delete(userDB)
+        session.commit()
+    return {"status": "User Deleted"}
