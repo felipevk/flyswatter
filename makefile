@@ -2,7 +2,7 @@ DB_SERVICE ?= db
 API_SERVICE ?= api
 TEST_DB ?= appdb_test
 
-.PHONY: db-up db-down db-create-test test psql-dev psql-test migrate-dev migrate-base-dev revision
+.PHONY: db-up db-down db-create-test db-drop-test test psql-dev psql-test migrate-dev migrate-base-dev revision
 
 db-up:
 	docker compose up -d db
@@ -16,7 +16,13 @@ db-create-test: db-up
 	"SELECT 1 FROM pg_database WHERE datname = '$(TEST_DB)';" | grep -q 1 \
 	|| docker compose exec db psql -U app -d postgres -c "CREATE DATABASE $(TEST_DB);"
 
-test: db-up
+db-drop-test: db-up
+	# drop appdb_test database if exists
+	docker compose exec db psql -U app -d postgres -tc \
+	"SELECT 1 FROM pg_database WHERE datname = '$(TEST_DB)';" | grep -q 1 \
+	|| docker compose exec db psql -U app -d postgres -c "DROP DATABASE $(TEST_DB);"
+
+test: db-up db-create-test
 	# load .env.test into the environment and run pytest from host
 	ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
 

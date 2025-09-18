@@ -34,8 +34,8 @@ def generate_new_token(userDB: User, session: Session) -> Token:
 
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
-@router.post("/user/create")
-def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_session)]):
+@router.post("/user/create", response_model = UserRead)
+def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_session)]) -> UserRead:
     usernameQuery = select(User).where(User.username == createReq.username)
     emailQuery = select(User).where(User.email == createReq.email)
     if session.execute(usernameQuery).all():
@@ -59,7 +59,16 @@ def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_
         )
     session.add(newUser)
     session.commit()
-    return {"status": "User Created with Success"}
+    
+    return UserRead(
+            id=newUser.public_id, 
+            email=newUser.email,
+            username=newUser.username,
+            full_name=newUser.name,
+            admin=newUser.admin,
+            disabled=newUser.disabled,
+            created_at=newUser.created_at.strftime('%a %d %b %Y, %I:%M%p')
+        )
 
 @router.post("/token", response_model = Token)
 async def login(

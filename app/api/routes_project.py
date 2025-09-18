@@ -10,11 +10,11 @@ from .routes_common import *
 
 router = APIRouter(tags=["project"])
 
-@router.post("/project/create")
+@router.post("/project/create", response_model = ProjectRead)
 async def create_project(
     createReq: ProjectCreate, 
     current_user: Annotated[User, Depends(require_admin)],
-    session: Annotated[Session, Depends(get_session)]):
+    session: Annotated[Session, Depends(get_session)]) -> ProjectRead:
     author = current_user.username
     if any(project.key == createReq.key for project in current_user.projects):
         raise HTTPException(
@@ -25,7 +25,14 @@ async def create_project(
     newProject = Project(key=createReq.key, title=createReq.title, author=current_user)
     session.add(newProject)
     session.commit()
-    return {"status": "Project created with success"}
+
+    return ProjectRead(
+        id=newProject.public_id,
+        title=newProject.title,
+        key=newProject.key,
+        author=newProject.author.username,
+        created_at=newProject.created_at.strftime('%a %d %b %Y, %I:%M%p')
+        )
 
 @router.post("/project/edit")
 async def edit_project(

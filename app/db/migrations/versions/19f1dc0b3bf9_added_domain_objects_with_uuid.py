@@ -106,4 +106,8 @@ def downgrade() -> None:
     op.drop_table('projects')
     op.drop_index(op.f('ix_users_public_id'), table_name='users')
     op.drop_table('users')
+    # Alembic doesn't drop enums, these had to be added manually
+    sa.Enum('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', name='issue_status_enum').drop(op.get_bind())
+    sa.Enum('LOW', 'MEDIUM', 'HIGH', 'URGENT', name='issue_priority_enum').drop(op.get_bind())
+    sa.Enum('OWNER', 'MAINTAINER', 'REPORTER', 'VIEWER', name='membership_role_enum').drop(op.get_bind())
     # ### end Alembic commands ###
