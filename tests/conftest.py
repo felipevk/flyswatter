@@ -1,8 +1,10 @@
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from app.db.base import Base  # your declarative Base
 from app.core.config import settings
+from app.main import app
+from app.api.routes_common import get_session
 import subprocess, os, sys
 
 TEST_DB_URL = settings.database_url
@@ -41,28 +43,52 @@ def apply_migrations():
 @pytest.fixture(scope="session")
 def connection():
     engine = create_engine(TEST_DB_URL, future=True)
-    # Keep one DB connection for the whole test session
+    # Keep ONE DB connection open for the whole test session.
     with engine.connect() as conn:
         yield conn
 
 @pytest.fixture(autouse=True)
 def db_session(connection):
+    # In order to keep test transactions isolated
+    # We start a test wide transaction that should remain open until the end of the test
+    # However, session.commit() ends a transaction, so we need to wrap the test between
+    # a nested sub transaction, and restart every time session.commit() is called
+    # Once the test is over we can rollback the test wide transaction
+
     trans = connection.begin()         # BEGIN
-    Session = sessionmaker(bind=connection, expire_on_commit=False, future=True)
-    testSession = Session()
-    
-    def get_session_override() -> Session:
-        return testSession
- 
-    #app.dependency_overrides[get_session] = get_session_override
 
     # Start a SAVEPOINT so the Session can use nested transactions
     nested = connection.begin_nested()
+
+    Session = sessionmaker(bind=connection, expire_on_commit=False, future=True)
+    testSession = Session()
+
+    # Listen to transaction end, ie session.commit()
+    # re-establish the SAVEPOINT so subsequent work is still isolated.
+    @event.listens_for(testSession, "after_transaction_end")
+    def _restart_savepoint(sess, trans_):
+        if not connection.in_nested_transaction():
+            connection.begin_nested()
 
     try:
         yield testSession
     finally:
         testSession.close()
-        nested.close()
-        trans.rollback()               # ROLLBACK
+        try:
+            nested.close()
+        except Exception:
+            pass
+        # ROLLBACK
+        trans.rollback()               
+        app.dependency_overrides.pop(get_session, None)
+
+@pytest.fixture(autouse=True)
+def override_fastapi_session(db_session):
+     def _override():
+         return db_session
+     app.dependency_overrides[get_session] = _override
+     try:
+         yield
+     finally:
+         app.dependency_overrides.pop(get_session, None)
         
