@@ -77,7 +77,11 @@ async def refresh(
     session: Annotated[Session, Depends(get_session)]) -> Token:
     payload = get_token_payload(token)
     if not payload:
-        raise credentials_exception
+        raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND ,
+        detail="Token not found",
+        headers={"WWW-Authenticate": "Bearer"}
+        )
     username = payload.get("sub")
     jti = payload.get("jti")
     userDB = get_user(username, session)
@@ -92,6 +96,13 @@ async def refresh(
         detail="Refresh token not found",
         headers={"WWW-Authenticate": "Bearer"}
         )
+    if refreshDB.revoked_at and refreshDB.revoked_at < datetime.now(tz=refreshDB.revoked_at.tzinfo):
+        raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token already revoked",
+        headers={"WWW-Authenticate": "Bearer"}
+        )
+
     refreshDB.revoked_at = datetime.now(timezone.utc)
     session.commit()
 
