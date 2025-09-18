@@ -3,12 +3,36 @@ from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from .dto import UserCreate, UserEdit, UserRead
 from sqlalchemy import select, insert
-from app.db.models import User
-from app.core.security import get_password_hash, create_access_token, get_token_payload, Token
+from app.db.models import User, RefreshToken
+from app.core.security import get_password_hash, create_access_token, create_refresh_token, get_token_expiry, Token
+from uuid import uuid4
+from datetime import datetime, timezone
 
 from .routes_common import *
 
 router = APIRouter(tags=["user"])
+
+def generate_new_token(userDB: User, session: Session) -> Token:
+    access_token = create_access_token(
+        data={"sub": userDB.username}
+    )
+
+    refresh_jti =  uuid4().hex
+    refresh_token = create_refresh_token(
+        data={"sub": userDB.username},
+        jti=refresh_jti
+    )
+
+    # Refresh tokens live on the DB
+    tokenDB = RefreshToken(
+        public_id=refresh_jti, 
+        expires_at=datetime.fromtimestamp(get_token_expiry(refresh_token)), 
+        user=userDB,
+        )
+    session.add(tokenDB)
+    session.commit()
+
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 @router.post("/user/create")
 def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_session)]):
@@ -44,10 +68,34 @@ async def login(
     userDB = authenticate_user(form_data.username, form_data.password, session)
     if not userDB:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="Incorrect username or password")
-    access_token = create_access_token(
-        data={"sub": userDB.username}
-    )
-    return Token(access_token=access_token, token_type="bearer")
+    
+    return generate_new_token(userDB, session)
+
+@router.post("/refresh", response_model = Token)
+async def refresh(
+    token: str,
+    session: Annotated[Session, Depends(get_session)]) -> Token:
+    payload = get_token_payload(token)
+    if not payload:
+        raise credentials_exception
+    username = payload.get("sub")
+    jti = payload.get("jti")
+    userDB = get_user(username, session)
+    if not userDB:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="Incorrect username or password")
+    
+    refreshQuery = select(RefreshToken).where(RefreshToken.public_id == jti)
+    refreshDB = session.execute(refreshQuery).scalars().first()
+    if not refreshDB:
+        raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Refresh token not found",
+        headers={"WWW-Authenticate": "Bearer"}
+        )
+    refreshDB.revoked_at = datetime.now(timezone.utc)
+    session.commit()
+
+    return generate_new_token(userDB, session)
 
 @router.post("/user/delete/{user_id}")
 async def delete_user(
