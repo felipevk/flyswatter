@@ -49,12 +49,12 @@ async def login(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/user/delete/{username}")
+@router.post("/user/delete/{user_id}")
 async def delete_user(
-    username: str, 
+    user_id: str, 
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)]):
-    userDB = get_user(username, session)
+    userDB = get_user_from_id(user_id, session)
     if not userDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
@@ -85,13 +85,35 @@ async def edit_user(
     userDB.admin = editReq.admin
     session.commit()
     return {"status": "User edited with success"}
-
-@router.get("/user/{username}", response_model = UserRead)
-async def read_user(
-    username: str, 
+    
+@router.get("/user/all", response_model = list[UserRead])
+async def read_all_users(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)]) -> UserRead:
-    userDB = get_user(username, session)
+    
+    userQuery = select(User)
+    userDB = session.execute(userQuery).scalars()
+
+    result = []
+    for user in userDB:
+        result.append(UserRead(
+            id=user.public_id, 
+            email=user.email,
+            username=user.username,
+            full_name=user.name,
+            admin=user.admin,
+            disabled=user.disabled,
+            created_at=user.created_at.strftime('%a %d %b %Y, %I:%M%p')
+        ))
+
+    return result
+
+@router.get("/user/{user_id}", response_model = UserRead)
+async def read_user(
+    user_id: str, 
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_session)]) -> UserRead:
+    userDB = get_user_from_id(user_id, session)
     if not userDB:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -99,5 +121,11 @@ async def read_user(
             headers={"WWW-Authenticate": "Bearer"}
         )
     return UserRead(
-        email=userDB.email,username=userDB.username,full_name=userDB.name,admin=userDB.admin,disabled=userDB.disabled
+            id=userDB.public_id, 
+            email=userDB.email,
+            username=userDB.username,
+            full_name=userDB.name,
+            admin=userDB.admin,
+            disabled=userDB.disabled,
+            created_at=userDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
         )

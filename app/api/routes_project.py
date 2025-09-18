@@ -27,47 +27,12 @@ async def create_project(
     session.commit()
     return {"status": "Project created with success"}
 
-@router.get("/project/read")
-async def read_project(
-    author: str, 
-    key: str,
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_session)]) -> ProjectRead:
-    authorDb = get_user(author, session)
-    if not authorDb:
-        raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="User not found",
-        headers={"WWW-Authenticate": "Bearer"}
-        )
-    projectQuery = select(Project).where(
-        Project.key == key and Project.user_id == authorDb.id
-        )
-    projectDB = session.execute(projectQuery).scalars().first()
-    if not projectDB:
-        raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="Project not found",
-        headers={"WWW-Authenticate": "Bearer"}
-        )
-    
-    return ProjectRead(title=projectDB.title,key=projectDB.key,author=authorDb.username)
-
 @router.post("/project/edit")
 async def edit_project(
-    author: str, 
-    key: str,
     editReq: ProjectEdit, 
     current_user: Annotated[User, Depends(require_admin)],
     session: Annotated[Session, Depends(get_session)]):
-    currAuthorDb = get_user(author, session)
     newAuthorDb = get_user(editReq.author, session)
-    if not currAuthorDb:
-        raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=f"User {author} not found",
-        headers={"WWW-Authenticate": "Bearer"}
-        )
     if not newAuthorDb:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
@@ -75,7 +40,7 @@ async def edit_project(
         headers={"WWW-Authenticate": "Bearer"}
         )
     projectQuery = select(Project).where(
-        Project.key == key and Project.user_id == currAuthorDb.id
+        Project.public_id == editReq.id
         )
     projectDB = session.execute(projectQuery).scalars().first()
     if not projectDB:
@@ -102,7 +67,36 @@ async def read_user_projects(
     myProjects = []
     for project in projectsDB:
         myProjects.append(
-            ProjectRead(title=project.title,key=project.key,author=current_user.username)
+            ProjectRead(
+                id=project.public_id,
+                title=project.title,
+                key=project.key,
+                author=project.author.username,
+                created_at=project.created_at.strftime('%a %d %b %Y, %I:%M%p'))
             )
     
     return myProjects
+
+@router.get("/project/{project_id}", response_model = ProjectRead)
+async def read_project(
+    project_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_session)]) -> ProjectRead:
+    projectQuery = select(Project).where(
+        Project.public_id == project_id
+        )
+    projectDB = session.execute(projectQuery).scalars().first()
+    if not projectDB:
+        raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Project not found",
+        headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    return ProjectRead(
+        id=projectDB.public_id,
+        title=projectDB.title,
+        key=projectDB.key,
+        author=projectDB.author.username,
+        created_at=projectDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
+        )

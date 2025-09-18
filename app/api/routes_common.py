@@ -26,6 +26,13 @@ def get_user(username: str, session: Session) -> User:
         return False
     return userDB
 
+def get_user_from_id(id: str, session: Session) -> User:
+    userQuery = select(User).where(User.public_id == id)
+    userDB = session.execute(userQuery).scalars().first()
+    if not userDB:
+        return False
+    return userDB
+
 def authenticate_user(username: str, password: str, session: Session):
     userDB = get_user(username, session)
     if not userDB:

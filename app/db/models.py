@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List
 import enum
 from datetime import datetime
+from uuid import uuid4
 
 from .base import Base
 
@@ -28,6 +29,9 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True,   # API-facing ID
+                                           nullable=False, index=True,
+                                           default=lambda: uuid4().hex)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(60))
     username: Mapped[str] = mapped_column(String(20),unique=True, nullable=False)
@@ -65,6 +69,9 @@ class Project(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True,
+                                           nullable=False, index=True,
+                                           default=lambda: uuid4().hex)
     title: Mapped[str] = mapped_column(unique=True, nullable=False)
     key: Mapped[str] = mapped_column(String(4), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
@@ -92,6 +99,9 @@ class Issue(Base):
     __tablename__ = "issues"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True,
+                                           nullable=False, index=True,
+                                           default=lambda: uuid4().hex)
     title: Mapped[str] = mapped_column(unique=True, nullable=False)
     # human key like APP-42
     key: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -114,6 +124,9 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(32), unique=True,
+                                           nullable=False, index=True,
+                                           default=lambda: uuid4().hex)
     body: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
