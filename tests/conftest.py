@@ -1,28 +1,42 @@
-import os
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.db.base import Base  # your declarative Base
 from app.core.config import settings
-import subprocess
+import subprocess, os, sys
 
 TEST_DB_URL = settings.database_url
 
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations():
     # Run Alembic migrations once for the test DB
-    subprocess.run(
-        ["alembic", "upgrade", "head"],
-        check=True,
-        env={**os.environ, "DATABASE_URL": TEST_DB_URL},
-    )
-
-    yield  # tests run after this
-    subprocess.run(
-            ["alembic", "downgrade", "base"],
+    try:
+        upgrade = subprocess.run(
+            ["alembic", "upgrade", "head"],
             check=True,
             env={**os.environ, "DATABASE_URL": TEST_DB_URL},
         )
+        print(upgrade.stdout)
+    except subprocess.CalledProcessError as e:
+        print("\n[ALEMBIC CMD]", e.cmd, file=sys.stderr)
+        print("\n[STDOUT]\n", e.stdout, file=sys.stderr)
+        print("\n[STDERR]\n", e.stderr, file=sys.stderr)
+        raise
+
+    yield  # tests run after this
+    try:
+        downgrade = subprocess.run(
+                ["alembic", "downgrade", "base"],
+                check=True,
+                env={**os.environ, "DATABASE_URL": TEST_DB_URL},
+            )
+        print(downgrade.stdout)
+    except subprocess.CalledProcessError as e:
+        print("\n[ALEMBIC CMD]", e.cmd, file=sys.stderr)
+        print("\n[STDOUT]\n", e.stdout, file=sys.stderr)
+        print("\n[STDERR]\n", e.stderr, file=sys.stderr)
+        raise
+
 
 @pytest.fixture(scope="session")
 def connection():
