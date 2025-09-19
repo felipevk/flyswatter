@@ -13,8 +13,10 @@ from .routes_common import *
 router = APIRouter(tags=["user"])
 
 def generate_new_token(userDB: User, session: Session) -> Token:
+    access_jti =  uuid4().hex
     access_token = create_access_token(
-        data={"sub": userDB.username}
+        data={"sub": userDB.username},
+        jti=access_jti
     )
 
     refresh_jti =  uuid4().hex
@@ -87,7 +89,7 @@ async def refresh(
     payload = get_token_payload(token)
     if not payload:
         raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND ,
+        status_code=status.HTTP_401_UNAUTHORIZED ,
         detail=apiMessages.token_auth_fail,
         headers={"WWW-Authenticate": "Bearer"}
         )
