@@ -217,6 +217,35 @@ def test_readuser_invalidtoken(db_session):
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
 
+def test_readuser_expiredtoken(db_session):
+    initial_datetime = datetime(year=2025, month=1, day=14,
+                                        hour=12, minute=0, second=1)
+    forward_datetime = initial_datetime.replace(
+        minute=initial_datetime.minute + settings.auth.accessTTL + 10
+        )
+    with freeze_time(initial_datetime) as frozen_datetime:
+        c = TestClient(app)
+        userDB = User(
+            id=None, 
+            username="jdoetestuser",
+            email="jdoetestuser@test.com",
+            name= "John Doe Test",
+            pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+        )
+        db_session.add(userDB)
+        db_session.commit()
+        login = userDB.username
+        password = "AAAAAAA" #matches hashed
+        token = get_test_token(c, login, password)
+
+        frozen_datetime.move_to(forward_datetime)
+        r = c.get(
+            f"/user/{userDB.public_id}",
+            headers={"Authorization": f"Bearer {token.access_token}"}
+            )
+
+    assert r.status_code == status.HTTP_401_UNAUTHORIZED
+
 def test_readuser_usernotfound(db_session):
     c = TestClient(app)
     userDB = User(
@@ -355,7 +384,9 @@ def test_refresh_revokedfail(db_session):
 def test_refresh_expiredfail(db_session):
     initial_datetime = datetime(year=2025, month=1, day=14,
                                         hour=12, minute=0, second=1)
-    forward_datetime = initial_datetime.replace(day=initial_datetime.day + settings.auth.refreshTTL + 10)
+    forward_datetime = initial_datetime.replace(
+        day=initial_datetime.day + settings.auth.refreshTTL + 10
+        )
     with freeze_time(initial_datetime) as frozen_datetime:
         c = TestClient(app)
         userDB = User(
