@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.main import app
 from app.api.routes_common import get_session
 import subprocess, os, sys
+from sqlalchemy_utils import database_exists, create_database
 
 TEST_DB_URL = settings.database_url
 
@@ -43,6 +44,9 @@ def apply_migrations():
 @pytest.fixture(scope="session")
 def connection():
     engine = create_engine(TEST_DB_URL, future=True)
+    if not database_exists(engine.url):
+        create_database(engine.url)
+        
     # Keep ONE DB connection open for the whole test session.
     with engine.connect() as conn:
         yield conn

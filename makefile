@@ -22,7 +22,7 @@ db-drop-test: db-up
 	"SELECT 1 FROM pg_database WHERE datname = '$(TEST_DB)';" | grep -q 1 \
 	|| docker compose exec db psql -U app -d postgres -c "DROP DATABASE $(TEST_DB);"
 
-test: db-up db-create-test
+test: db-up
 	# load .env.test into the environment and run pytest from host
 	ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
 
