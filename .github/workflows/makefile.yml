@@ -10,6 +10,7 @@ env:
   DB_HOST: localhost
   DB_USERNAME: app
   DB_PASSWORD: app123
+  ENV_TEST: ${{ secrets.ENV_TEST }}
 
 jobs:
   run-tests:
@@ -47,7 +48,7 @@ jobs:
       run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
       
     - name: Create env file
-      run: echo "${{ secrets.ENV_TEST }}" | base64 --decode > .envtest
+      run: echo $ENV_TEST | base64 --decode > .envtest
 
     - name: Run pytest
       run: ENV=.envtest bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
