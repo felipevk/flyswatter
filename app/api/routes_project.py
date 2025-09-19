@@ -19,7 +19,7 @@ async def create_project(
     if any(project.key == createReq.key for project in current_user.projects):
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Project with key already exists",
+        detail=apiMessages.projectkey_exists,
         headers={"WWW-Authenticate": "Bearer"}
         )
     newProject = Project(key=createReq.key, title=createReq.title, author=current_user)
@@ -34,11 +34,11 @@ async def create_project(
         created_at=newProject.created_at.strftime('%a %d %b %Y, %I:%M%p')
         )
 
-@router.post("/project/edit")
+@router.post("/project/edit", response_model = ProjectRead)
 async def edit_project(
     editReq: ProjectEdit, 
     current_user: Annotated[User, Depends(require_admin)],
-    session: Annotated[Session, Depends(get_session)]):
+    session: Annotated[Session, Depends(get_session)]) -> ProjectRead:
     newAuthorDb = get_user(editReq.author, session)
     if not newAuthorDb:
         raise HTTPException(
@@ -53,7 +53,7 @@ async def edit_project(
     if not projectDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Project not found",
+        detail=apiMessages.project_not_found,
         headers={"WWW-Authenticate": "Bearer"}
         )
     projectDB.title = editReq.title
@@ -61,7 +61,13 @@ async def edit_project(
     projectDB.author = newAuthorDb
 
     session.commit()
-    return {"status": "Project edited with success"}
+    return ProjectRead(
+        id=projectDB.public_id,
+        title=projectDB.title,
+        key=projectDB.key,
+        author=projectDB.author.username,
+        created_at=projectDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
+    )
 
 @router.get("/project/mine", response_model = list[ProjectRead])
 async def read_user_projects(
@@ -96,7 +102,7 @@ async def read_project(
     if not projectDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Project not found",
+        detail=apiMessages.project_not_found,
         headers={"WWW-Authenticate": "Bearer"}
         )
     

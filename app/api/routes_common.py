@@ -6,8 +6,25 @@ from app.db.session import engine, SessionLocal
 from app.core.security import verify_password, get_token_payload, Token
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+class Messages(BaseModel):
+    token_auth_fail: str = "Could not validate credentials"
+    inactive_user: str = "Inactive user"
+    requires_admin: str = "User requires admin access"
+    username_exists: str = "Username already exists"
+    email_exists: str = "Email already registered"
+    login_fail: str = "Incorrect username or password"
+    refresh_not_found: str = "Refresh token not found"
+    refresh_revoked: str = "Token already revoked"
+    user_not_found: str = "User not found"
+    user_deleted: str = "User deleted"
+    projectkey_exists: str = "Project key already exists"
+    project_not_found: str = "Project not found"
+
+apiMessages = Messages()
 
 # Will return session at first time it's driven by fastapi
 # and it will call it again once the endpoint returns
@@ -44,7 +61,7 @@ def authenticate_user(username: str, password: str, session: Session):
 def get_user_from_token(token: Annotated[str, Depends(oauth2_scheme)], session: Session = Depends(get_session)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=apiMessages.token_auth_fail,
         headers={"WWW-Authenticate": "Bearer"},
     )
     payload = get_token_payload(token)
@@ -60,12 +77,12 @@ async def get_current_active_user(
     current_user: Annotated[User, Depends(get_user_from_token)],
 ):
     if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=400, detail=apiMessages.inactive_user)
     return current_user
 
 async def require_admin(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     if not current_user.admin:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User requires admin access")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.require_admin)
     return current_user

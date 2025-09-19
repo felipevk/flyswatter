@@ -41,13 +41,13 @@ def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_
     if session.execute(usernameQuery).all():
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Username already exists",
+        detail=apiMessages.username_exists,
         headers={"WWW-Authenticate": "Bearer"},
     )
     if session.execute(emailQuery).all():
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Email already registered",
+        detail=apiMessages.email_exists,
         headers={"WWW-Authenticate": "Bearer"},
     )
     newUser = User(
@@ -59,7 +59,7 @@ def create_user(createReq : UserCreate, session: Annotated[Session, Depends(get_
         )
     session.add(newUser)
     session.commit()
-    
+
     return UserRead(
             id=newUser.public_id, 
             email=newUser.email,
@@ -76,7 +76,7 @@ async def login(
     session: Annotated[Session, Depends(get_session)]) -> Token:
     userDB = authenticate_user(form_data.username, form_data.password, session)
     if not userDB:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="Incorrect username or password")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail=apiMessages.login_fail)
     
     return generate_new_token(userDB, session)
 
@@ -88,7 +88,7 @@ async def refresh(
     if not payload:
         raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND ,
-        detail="Token not found",
+        detail=apiMessages.token_auth_fail,
         headers={"WWW-Authenticate": "Bearer"}
         )
     username = payload.get("sub")
@@ -102,13 +102,13 @@ async def refresh(
     if not refreshDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Refresh token not found",
+        detail=apiMessages.refresh_not_found,
         headers={"WWW-Authenticate": "Bearer"}
         )
     if refreshDB.revoked_at and refreshDB.revoked_at < datetime.now(tz=refreshDB.revoked_at.tzinfo):
         raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Token already revoked",
+        detail=apiMessages.refresh_revoked,
         headers={"WWW-Authenticate": "Bearer"}
         )
 
@@ -126,24 +126,24 @@ async def delete_user(
     if not userDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Username not found",
+        detail=apiMessages.user_not_found,
         headers={"WWW-Authenticate": "Bearer"}
         )
         session.delete(userDB)
         session.commit()
-    return {"status": "User Deleted"}
+    return {"status": apiMessages.user_deleted}
 
-@router.post("/user/edit")
+@router.post("/user/edit", response_model = UserRead)
 async def edit_user(
     editReq: UserEdit, 
     current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_session)]):
+    session: Annotated[Session, Depends(get_session)]) -> UserRead:
     userQuery = select(User).where(User.username == editReq.username)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
         raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="Username not found",
+        detail=apiMessages.user_not_found,
         headers={"WWW-Authenticate": "Bearer"}
         )
     userDB.email = editReq.email
@@ -152,7 +152,16 @@ async def edit_user(
     userDB.disabled = editReq.disabled
     userDB.admin = editReq.admin
     session.commit()
-    return {"status": "User edited with success"}
+
+    return UserRead(
+            id=userDB.public_id, 
+            email=userDB.email,
+            username=userDB.username,
+            full_name=userDB.name,
+            admin=userDB.admin,
+            disabled=userDB.disabled,
+            created_at=userDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
+        )
     
 @router.get("/user/all", response_model = list[UserRead])
 async def read_all_users(
@@ -185,7 +194,7 @@ async def read_user(
     if not userDB:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username not found",
+            detail=apiMessages.user_not_found,
             headers={"WWW-Authenticate": "Bearer"}
         )
     return UserRead(

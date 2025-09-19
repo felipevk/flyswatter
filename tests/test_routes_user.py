@@ -4,6 +4,7 @@ from app.api.dto import UserRead, UserCreate
 from app.db.models import User
 from .conftest import db_session
 from fastapi import status
+from app.api.routes_common import apiMessages
 
 def test_createuser_success():
     c = TestClient(app)
@@ -54,7 +55,7 @@ def test_createuser_exists(db_session):
         json = toCreate.model_dump())
 
     assert r.status_code == status.HTTP_409_CONFLICT
-    assert r.json()["detail"] == "Username already exists"
+    assert r.json()["detail"] == apiMessages.username_exists
 
         
     
