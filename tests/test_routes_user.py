@@ -135,6 +135,7 @@ def test_login_invalidusername(db_session):
         )
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
+    assert r.json()["detail"] == apiMessages.login_fail
 
 def test_login_invalidpassword(db_session):
     c = TestClient(app)
@@ -155,6 +156,7 @@ def test_login_invalidpassword(db_session):
         )
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
+    assert r.json()["detail"] == apiMessages.login_fail
 
 def test_readuser_success(db_session):
     c = TestClient(app)
@@ -216,6 +218,7 @@ def test_readuser_invalidtoken(db_session):
         )
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
+    assert r.json()["detail"] == apiMessages.token_auth_fail
 
 def test_readuser_expiredtoken(db_session):
     initial_datetime = datetime(year=2025, month=1, day=14,
@@ -245,6 +248,7 @@ def test_readuser_expiredtoken(db_session):
             )
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
+    assert r.json()["detail"] == apiMessages.token_auth_fail
 
 def test_readuser_usernotfound(db_session):
     c = TestClient(app)
