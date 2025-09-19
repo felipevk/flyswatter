@@ -1,0 +1,53 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  DB_HOST: localhost
+  DB_USERNAME: app
+  DB_PASSWORD: app123
+
+jobs:
+  run-tests:
+
+    runs-on: ubuntu-latest
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_DB: appdb_test    
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app123
+          
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Poetry
+      run: pip install --no-cache-dir poetry
+
+    - name: Install dependencies
+      run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
+
+    - name: Set env
+      run: ENV=.env.test bash -lc 'set -a; source $$ENV; set +a;
+
+    - name: Run pytest
+      run: poetry run pytest
