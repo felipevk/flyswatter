@@ -15,7 +15,7 @@ def apply_migrations():
     # Run Alembic migrations once for the test DB
     try:
         upgrade = subprocess.run(
-            ["alembic", "upgrade", "head"],
+            ["poetry", "run", "alembic", "upgrade", "head"],
             check=True,
             env={**os.environ, "DATABASE_URL": TEST_DB_URL},
         )
@@ -29,7 +29,7 @@ def apply_migrations():
     yield  # tests run after this
     try:
         downgrade = subprocess.run(
-                ["alembic", "downgrade", "base"],
+                ["poetry", "run", "alembic", "downgrade", "base"],
                 check=True,
                 env={**os.environ, "DATABASE_URL": TEST_DB_URL},
             )
@@ -42,11 +42,11 @@ def apply_migrations():
 
 
 @pytest.fixture(scope="session")
-def connection():
+def connection(apply_migrations):
     engine = create_engine(TEST_DB_URL, future=True)
     if not database_exists(engine.url):
         create_database(engine.url)
-        
+
     # Keep ONE DB connection open for the whole test session.
     with engine.connect() as conn:
         yield conn
