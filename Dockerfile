@@ -22,7 +22,3 @@ COPY app ./app
 
 # 7. Define the default startup command
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# 8. Forcing the environment to change
-# In future projects, use .env.docker
-ENV APP_ENV=docker
