@@ -45,9 +45,9 @@ jobs:
 
     - name: Install dependencies
       run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
-
-    - name: Set env
-      run: ENV=.env.test bash -lc 'set -a; source $$ENV; set +a;
+      
+    - name: Create env file
+      run: echo "${{ secrets.ENV_FILE }}" > .env.test
 
     - name: Run pytest
-      run: poetry run pytest
+      run: ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
