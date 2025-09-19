@@ -11,6 +11,14 @@ env:
   DB_USERNAME: app
   DB_PASSWORD: app123
   ENV_TEST: ${{ secrets.ENV_TEST }}
+  APP_ENV: test
+  DB_PORT: 5432
+  POSTGRES_DB: appdb_test
+  DB_DRIVER: postgresql+psycopg
+  JWT_ALG: HS256
+  JWT_SECRET: 17a28c28c4ffd960418bea07cc99ea9f8939855cd183cbedeac32e9c8992bff9
+  ACCESS_TTL_MIN: 10
+  REFRESH_TTL_DAYS: 7
 
 jobs:
   run-tests:
@@ -46,9 +54,6 @@ jobs:
 
     - name: Install dependencies
       run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
-      
-    - name: Create env file
-      run: echo $ENV_TEST | base64 --decode > .envtest
 
     - name: Run pytest
-      run: ENV=.envtest bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
+      run: poetry run pytest -q
