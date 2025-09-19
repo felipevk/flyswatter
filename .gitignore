@@ -137,6 +137,7 @@ celerybeat.pid
 # Environments
 .env
 .env.test
+.env.docker
 .envrc
 .venv
 env/
