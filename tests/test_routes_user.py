@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
-from app.api.dto import UserRead, UserCreate
+from app.api.dto import UserRead, UserCreate, UserEdit
 from app.db.models import User, RefreshToken
 from .conftest import db_session
 from fastapi import status
@@ -241,6 +241,40 @@ def test_readuser_usernotfound(db_session):
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.user_not_found
 
+def test_readuser_inactiveuser(db_session):
+    c = TestClient(app)
+    userDB = User(
+        id=None, 
+        username="jdoetestuser",
+        email="jdoetestuser@test.com",
+        name= "John Doe Test",
+        pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+    )
+    db_session.add(userDB)
+    db_session.commit()
+    expectedUser = UserRead(
+        id = userDB.public_id,
+        username = userDB.username,
+        email = userDB.email,
+        full_name = userDB.name,
+        admin = userDB.admin,
+        disabled = userDB.disabled,
+        created_at = userDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
+    )
+    login = userDB.username
+    password = "AAAAAAA" #matches hashed
+    token = get_test_token(c, login, password)
+
+    userDB.disabled = True
+    db_session.commit()
+    r = c.get(
+        f"/user/{expectedUser.id}",
+        headers={"Authorization": f"Bearer {token.access_token}"}
+        )
+
+    assert r.status_code == status.HTTP_401_UNAUTHORIZED
+    assert r.json()["detail"] == apiMessages.inactive_user
+
 def test_refresh_success(db_session):
     c = TestClient(app)
     userDB = User(
@@ -266,7 +300,7 @@ def test_refresh_success(db_session):
     firstToken = get_test_token(c, login, password)
 
     r = c.post(
-        f"/refresh",
+        "/refresh",
         params={"token": firstToken.refresh_token}
         )
     newToken = Token(**r.json())
@@ -306,12 +340,12 @@ def test_refresh_revokedfail(db_session):
     password = "AAAAAAA" #matches hashed
     firstToken = get_test_token(c, login, password)
     c.post(
-        f"/refresh",
+        "/refresh",
         params={"token": firstToken.refresh_token}
         )
 
     r = c.post(
-        f"/refresh",
+        "/refresh",
         params={"token": firstToken.refresh_token}
         )
 
@@ -346,16 +380,149 @@ def test_refresh_expiredfail(db_session):
         password = "AAAAAAA" #matches hashed
         firstToken = get_test_token(c, login, password)
         firstR = c.post(
-            f"/refresh",
+            "/refresh",
             params={"token": firstToken.refresh_token}
             )
         token = Token(**firstR.json())
 
         frozen_datetime.move_to(forward_datetime)
         r = c.post(
-            f"/refresh",
+            "/refresh",
             params={"token": token.refresh_token}
             )
 
     assert r.status_code == status.HTTP_401_UNAUTHORIZED
     assert r.json()["detail"] == apiMessages.token_auth_fail
+
+def test_edituser_success(db_session):
+    c = TestClient(app)
+    userDB = User(
+        id=None, 
+        username="jdoetestuser",
+        email="jdoetestuser@test.com",
+        name= "John Doe Test",
+        pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+    )
+    newEmail = "newEmail@test.com"
+    db_session.add(userDB)
+    db_session.commit()
+    expectedUser = UserRead(
+        id = userDB.public_id,
+        username = userDB.username,
+        email = newEmail,
+        full_name = userDB.name,
+        admin = userDB.admin,
+        disabled = userDB.disabled,
+        created_at = userDB.created_at.strftime('%a %d %b %Y, %I:%M%p')
+    )
+    login = userDB.username
+    password = "AAAAAAA" #matches hashed
+    token = get_test_token(c, login, password)
+    toEdit = UserEdit(
+        id = userDB.public_id,
+        username = userDB.username,
+        email = newEmail,
+        full_name = userDB.name,
+        password = password,
+        admin = userDB.admin,
+        disabled = userDB.disabled
+    )
+
+    r = c.post(
+        "/user/edit",
+        headers={"Authorization": f"Bearer {token.access_token}"},
+        json = toEdit.model_dump()
+        )
+    data = UserRead(**r.json())
+
+    assert r.status_code == status.HTTP_200_OK
+    assert data.id == expectedUser.id
+    assert data.username == expectedUser.username
+    assert data.email == expectedUser.email
+    assert data.full_name == expectedUser.full_name
+    assert data.admin == expectedUser.admin
+    assert data.disabled == expectedUser.disabled
+    assert data.created_at == expectedUser.created_at
+
+def test_edituser_usernotfound(db_session):
+    c = TestClient(app)
+    userDB = User(
+        id=None, 
+        username="jdoetestuser",
+        email="jdoetestuser@test.com",
+        name= "John Doe Test",
+        pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+    )
+    newEmail = "newEmail@test.com"
+    db_session.add(userDB)
+    db_session.commit()
+    login = userDB.username
+    password = "AAAAAAA" #matches hashed
+    token = get_test_token(c, login, password)
+    toEdit = UserEdit(
+        id = "AAAAA", # invalid id
+        username = userDB.username,
+        email = newEmail,
+        full_name = userDB.name,
+        password = password,
+        admin = userDB.admin,
+        disabled = userDB.disabled
+    )
+
+    r = c.post(
+        "/user/edit",
+        headers={"Authorization": f"Bearer {token.access_token}"},
+        json = toEdit.model_dump()
+        )
+
+    assert r.status_code == status.HTTP_409_CONFLICT
+    assert r.json()["detail"] == apiMessages.user_not_found
+
+def test_deleteuser_success(db_session):
+    c = TestClient(app)
+    userDB = User(
+        id=None, 
+        username="jdoetestuser",
+        email="jdoetestuser@test.com",
+        name= "John Doe Test",
+        pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+    )
+    newEmail = "newEmail@test.com"
+    db_session.add(userDB)
+    db_session.commit()
+    login = userDB.username
+    password = "AAAAAAA" #matches hashed
+    token = get_test_token(c, login, password)
+
+    r = c.post(
+        f"/user/delete/{userDB.public_id}",
+        headers={"Authorization": f"Bearer {token.access_token}"}
+        )
+
+    assert r.status_code == status.HTTP_200_OK
+    assert r.json()["status"] == apiMessages.user_deleted
+
+def test_deleteuser_usernotfound(db_session):
+    c = TestClient(app)
+    userDB = User(
+        id=None, 
+        username="jdoetestuser",
+        email="jdoetestuser@test.com",
+        name= "John Doe Test",
+        pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO"
+    )
+    newEmail = "newEmail@test.com"
+    db_session.add(userDB)
+    db_session.commit()
+    login = userDB.username
+    password = "AAAAAAA" #matches hashed
+    token = get_test_token(c, login, password)
+    invalidId = "AAAA"
+
+    r = c.post(
+        f"/user/delete/{invalidId}",
+        headers={"Authorization": f"Bearer {token.access_token}"}
+        )
+
+    assert r.status_code == status.HTTP_409_CONFLICT
+    assert r.json()["detail"] == apiMessages.user_not_found

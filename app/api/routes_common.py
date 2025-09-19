@@ -77,7 +77,7 @@ async def get_current_active_user(
     current_user: Annotated[User, Depends(get_user_from_token)],
 ):
     if current_user.disabled:
-        raise HTTPException(status_code=400, detail=apiMessages.inactive_user)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.inactive_user)
     return current_user
 
 async def require_admin(

@@ -140,7 +140,7 @@ async def edit_user(
     editReq: UserEdit, 
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)]) -> UserRead:
-    userQuery = select(User).where(User.username == editReq.username)
+    userQuery = select(User).where(User.public_id == editReq.id)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
         raise HTTPException(
