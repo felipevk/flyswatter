@@ -10,6 +10,8 @@ env:
   DB_HOST: localhost
   DB_USERNAME: app
   DB_PASSWORD: app123
+  POSTGRES_USER: app
+  POSTGRES_PASSWORD: app123
   APP_ENV: test
   DB_PORT: 5432
   POSTGRES_DB: appdb_test
