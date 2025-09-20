@@ -44,8 +44,6 @@ def apply_migrations():
 @pytest.fixture(scope="session")
 def connection(apply_migrations):
     engine = create_engine(TEST_DB_URL, future=True)
-    if not database_exists(engine.url):
-        create_database(engine.url)
 
     # Keep ONE DB connection open for the whole test session.
     with engine.connect() as conn:
