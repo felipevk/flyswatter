@@ -55,7 +55,7 @@ jobs:
       run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
 
     - name: Init database
-      run: python app/db/create_database.py
+      run: poetry run python -m app.db.create_database
 
     - name: Run pytest
       run: poetry run pytest -q
