@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
 class Messages(BaseModel):
     token_auth_fail: str = "Could not validate credentials"
     inactive_user: str = "Inactive user"
@@ -24,7 +25,9 @@ class Messages(BaseModel):
     projectkey_exists: str = "Project key already exists"
     project_not_found: str = "Project not found"
 
+
 apiMessages = Messages()
+
 
 # Will return session at first time it's driven by fastapi
 # and it will call it again once the endpoint returns
@@ -36,12 +39,14 @@ def get_session() -> Session:
     finally:
         session.close()
 
+
 def get_user(username: str, session: Session) -> User:
     userQuery = select(User).where(User.username == username)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
         return False
     return userDB
+
 
 def get_user_from_id(id: str, session: Session) -> User:
     userQuery = select(User).where(User.public_id == id)
@@ -50,15 +55,20 @@ def get_user_from_id(id: str, session: Session) -> User:
         return False
     return userDB
 
+
 def authenticate_user(username: str, password: str, session: Session):
     userDB = get_user(username, session)
     if not userDB:
-            return False
+        return False
     if not verify_password(password, userDB.pass_hash):
-            return False
+        return False
     return userDB
 
-def get_user_from_token(token: Annotated[str, Depends(oauth2_scheme)], session: Session = Depends(get_session)) -> User:
+
+def get_user_from_token(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: Session = Depends(get_session),
+) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=apiMessages.token_auth_fail,
@@ -73,16 +83,22 @@ def get_user_from_token(token: Annotated[str, Depends(oauth2_scheme)], session: 
         raise credentials_exception
     return user
 
+
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_user_from_token)],
 ):
     if current_user.disabled:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.inactive_user)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.inactive_user
+        )
     return current_user
+
 
 async def require_admin(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     if not current_user.admin:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.require_admin)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.require_admin
+        )
     return current_user

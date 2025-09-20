@@ -8,6 +8,7 @@ app.include_router(health_router)
 app.include_router(user_router)
 app.include_router(project_router)
 
+
 @app.get("/")
 def root():
     return {"ok": True}

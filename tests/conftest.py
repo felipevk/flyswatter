@@ -10,6 +10,7 @@ from sqlalchemy_utils import database_exists, create_database
 
 TEST_DB_URL = settings.database_url
 
+
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations():
     # Run Alembic migrations once for the test DB
@@ -29,10 +30,10 @@ def apply_migrations():
     yield  # tests run after this
     try:
         downgrade = subprocess.run(
-                ["poetry", "run", "alembic", "downgrade", "base"],
-                check=True,
-                env={**os.environ, "DATABASE_URL": TEST_DB_URL},
-            )
+            ["poetry", "run", "alembic", "downgrade", "base"],
+            check=True,
+            env={**os.environ, "DATABASE_URL": TEST_DB_URL},
+        )
         print(downgrade.stdout)
     except subprocess.CalledProcessError as e:
         print("\n[ALEMBIC CMD]", e.cmd, file=sys.stderr)
@@ -49,6 +50,7 @@ def connection(apply_migrations):
     with engine.connect() as conn:
         yield conn
 
+
 @pytest.fixture(autouse=True)
 def db_session(connection):
     # In order to keep test transactions isolated
@@ -57,7 +59,7 @@ def db_session(connection):
     # a nested sub transaction, and restart every time session.commit() is called
     # Once the test is over we can rollback the test wide transaction
 
-    trans = connection.begin()         # BEGIN
+    trans = connection.begin()  # BEGIN
 
     # Start a SAVEPOINT so the Session can use nested transactions
     nested = connection.begin_nested()
@@ -81,16 +83,17 @@ def db_session(connection):
         except Exception:
             pass
         # ROLLBACK
-        trans.rollback()               
+        trans.rollback()
         app.dependency_overrides.pop(get_session, None)
+
 
 @pytest.fixture(autouse=True)
 def override_fastapi_session(db_session):
-     def _override():
-         return db_session
-     app.dependency_overrides[get_session] = _override
-     try:
-         yield
-     finally:
-         app.dependency_overrides.pop(get_session, None)
-        
+    def _override():
+        return db_session
+
+    app.dependency_overrides[get_session] = _override
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(get_session, None)

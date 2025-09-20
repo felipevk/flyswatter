@@ -4,6 +4,7 @@ from app.db.session import engine
 
 router = APIRouter(tags=["health"])
 
+
 @router.get("/health")
 def health():
     with engine.connect() as conn:

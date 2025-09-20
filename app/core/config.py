@@ -1,14 +1,16 @@
 from pydantic import BaseModel
 import os
 
+
 def build_db_url() -> str:
     user = os.getenv("POSTGRES_USER", "")
-    pwd  = os.getenv("POSTGRES_PASSWORD", "")
+    pwd = os.getenv("POSTGRES_PASSWORD", "")
     host = os.getenv("DB_HOST", "")
     port = int(os.getenv("DB_PORT", ""))
-    db   = os.getenv("POSTGRES_DB", "")
+    db = os.getenv("POSTGRES_DB", "")
     driver = os.getenv("DB_DRIVER", "")
     return f"{driver}://{user}:{pwd}@{host}:{port}/{db}"
+
 
 class AuthSettings(BaseModel):
     jwtAlg: str = os.getenv("JWT_ALG", "")
@@ -16,8 +18,10 @@ class AuthSettings(BaseModel):
     accessTTL: int = int(os.getenv("ACCESS_TTL_MIN", ""))
     refreshTTL: int = int(os.getenv("REFRESH_TTL_DAYS", ""))
 
+
 class Settings(BaseModel):
     database_url: str = build_db_url()
-    auth: AuthSettings =  AuthSettings()
+    auth: AuthSettings = AuthSettings()
+
 
 settings = Settings()
