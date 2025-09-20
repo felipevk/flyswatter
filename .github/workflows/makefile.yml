@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run tests and linting
 
 on:
   push:
@@ -56,8 +56,21 @@ jobs:
     - name: Install dependencies
       run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
 
-    - name: Init database
+    - name: Create database
       run: poetry run python -m app.db.create_database
 
     - name: Run pytest
       run: poetry run pytest -q
+  
+  linting:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Python Linter
+      uses: sunnysid3up/python-linter@master
+      with:
+        mypy-options: "--ignore-missing-imports --show-error-codes"
+        isort-options: "-w 100"
