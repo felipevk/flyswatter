@@ -560,4 +560,4 @@ def test_deleteuser_usernotfound(db_session):
         )
 
     assert r.status_code == status.HTTP_409_CONFLICT
-    assert r.json()["detail"] != apiMessages.user_not_found
+    assert r.json()["detail"] == apiMessages.user_not_found
