@@ -44,8 +44,8 @@ revision:
 
 lint:
 	poetry run black .
-	poetry run isort .
+	poetry run isort . --profile black
 
 lint-check:
 	poetry run black --check .
-	poetry run isort . -c
+	poetry run isort . -c --profile black
