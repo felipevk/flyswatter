@@ -2,7 +2,7 @@ DB_SERVICE ?= db
 API_SERVICE ?= api
 TEST_DB ?= appdb_test
 
-.PHONY: db-up db-down db-create-test db-drop-test test psql-dev psql-test migrate-dev migrate-base-dev revision format format-check
+.PHONY: db-up db-down db-create-test db-drop-test test psql-dev psql-test migrate-dev migrate-base-dev revision lint lint-check
 
 db-up:
 	docker compose up -d db
@@ -42,8 +42,10 @@ revision:
 	# make revision msg="Updated user table"
 	poetry run alembic revision --autogenerate -m "$(msg)"
 
-format:
+lint:
 	poetry run black .
+	poetry run isort **/*.py
 
-format-check:
+lint-check:
 	poetry run black --check .
+	poetry run isort **/*.py -c
