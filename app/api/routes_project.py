@@ -1,16 +1,14 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from typing import Annotated
-from .dto import ProjectCreate, ProjectEdit, ProjectRead
-from sqlalchemy import select, insert, update
-from app.db.models import User, Project
-from app.core.security import (
-    get_password_hash,
-    create_access_token,
-    get_token_payload,
-    Token,
-)
+from sqlalchemy import insert, select, update
 
+from app.core.security import (Token, create_access_token, get_password_hash,
+                               get_token_payload)
+from app.db.models import Project, User
+
+from .dto import ProjectCreate, ProjectEdit, ProjectRead
 from .routes_common import *
 
 router = APIRouter(tags=["project"])

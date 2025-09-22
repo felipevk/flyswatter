@@ -1,2 +1,2 @@
-from .base import Base
 from . import models
+from .base import Base

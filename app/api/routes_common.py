@@ -1,12 +1,14 @@
 from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.db.models import User
-from app.db.session import engine, SessionLocal
-from app.core.security import verify_password, get_token_payload, Token
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+
+from app.core.security import Token, get_token_payload, verify_password
+from app.db.models import User
+from app.db.session import SessionLocal, engine
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

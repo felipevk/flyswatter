@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
+from sqlalchemy_utils import create_database, database_exists
+
 from app.core.config import settings
-from sqlalchemy_utils import database_exists, create_database
 
 if __name__ == "__main__":
     engine = create_engine(settings.database_url, future=True)

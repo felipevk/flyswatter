@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 import os
+
+from pydantic import BaseModel
 
 
 def build_db_url() -> str:

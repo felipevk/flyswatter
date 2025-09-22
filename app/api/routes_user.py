@@ -1,19 +1,17 @@
+from datetime import datetime, timezone
+from typing import Annotated
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from typing import Annotated
-from .dto import UserCreate, UserEdit, UserRead
-from sqlalchemy import select, insert
-from app.db.models import User, RefreshToken
-from app.core.security import (
-    get_password_hash,
-    create_access_token,
-    create_refresh_token,
-    get_token_expiry,
-    Token,
-)
-from uuid import uuid4
-from datetime import datetime, timezone
+from sqlalchemy import insert, select
 
+from app.core.security import (Token, create_access_token,
+                               create_refresh_token, get_password_hash,
+                               get_token_expiry)
+from app.db.models import RefreshToken, User
+
+from .dto import UserCreate, UserEdit, UserRead
 from .routes_common import *
 
 router = APIRouter(tags=["user"])

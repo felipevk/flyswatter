@@ -1,9 +1,10 @@
-from sqlalchemy import String, ForeignKey, DateTime, UniqueConstraint, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import List
 import enum
 from datetime import datetime
+from typing import List
 from uuid import uuid4
+
+from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 

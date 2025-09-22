@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from pydantic import BaseModel
-import jwt
+
 from .config import settings
-from datetime import datetime, timedelta, timezone
-from jwt.exceptions import InvalidTokenError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
