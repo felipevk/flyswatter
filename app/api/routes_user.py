@@ -6,9 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import insert, select
 
-from app.core.security import (Token, create_access_token,
-                               create_refresh_token, get_password_hash,
-                               get_token_expiry)
+from app.core.security import (
+    Token,
+    create_access_token,
+    create_refresh_token,
+    get_password_hash,
+    get_token_expiry,
+)
 from app.db.models import RefreshToken, User
 
 from .dto import UserCreate, UserEdit, UserRead
