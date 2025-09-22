@@ -44,8 +44,8 @@ revision:
 
 lint:
 	poetry run black .
-	poetry run isort **/*.py
+	poetry run isort .
 
 lint-check:
 	poetry run black --check .
-	poetry run isort **/*.py -c
+	poetry run isort . -c
