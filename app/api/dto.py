@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from app.db.models import IssueStatus, IssuePriority
 
 class UserCreate(BaseModel):
     username: str
@@ -37,3 +37,32 @@ class ProjectRead(ProjectCreate):
 
 class ProjectEdit(ProjectRead):
     pass
+
+
+class IssueCreate(BaseModel):
+    project_id: str
+    title: str
+    description: str
+    assignee_id: str
+    priority: IssuePriority
+
+
+class IssueEdit(IssueCreate):
+    status: IssueStatus
+
+
+class IssueRead(IssueEdit):
+    created_at: str
+    updated_at: str
+
+class CommentCreate(BaseModel):
+    issue_id: str
+    body: str
+
+class CommentEdit(CommentCreate):
+    pass
+
+class CommentRead(CommentCreate):
+    author: str
+    created_at: str
+    updated_at: str

@@ -151,8 +151,10 @@ async def delete_user(
             detail=apiMessages.user_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-        session.delete(userDB)
-        session.commit()
+
+    session.delete(userDB)
+    session.commit()
+    
     return {"status": apiMessages.user_deleted}
 
 

@@ -26,6 +26,7 @@ class Messages(BaseModel):
     user_deleted: str = "User deleted"
     projectkey_exists: str = "Project key already exists"
     project_not_found: str = "Project not found"
+    project_deleted: str = "Project deleted"
 
 
 apiMessages = Messages()
@@ -101,6 +102,6 @@ async def require_admin(
 ):
     if not current_user.admin:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=apiMessages.require_admin
+            status_code=status.HTTP_403_FORBIDDEN, detail=apiMessages.requires_admin
         )
     return current_user

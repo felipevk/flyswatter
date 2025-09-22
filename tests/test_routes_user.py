@@ -13,17 +13,7 @@ from app.db.models import RefreshToken, User
 from app.main import app
 
 from .conftest import db_session
-
-
-def get_test_token(client, login, password) -> Token:
-    r = client.post(
-        "/token",
-        data={"username": login, "password": password, "grant_type": "password"},
-    )
-
-    assert r.status_code == status.HTTP_200_OK
-
-    return Token(**r.json())
+from .test_routes_common import *
 
 
 def test_createuser_success():

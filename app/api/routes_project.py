@@ -1,15 +1,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy import insert, select, update
 
-from app.core.security import (
-    Token,
-    create_access_token,
-    get_password_hash,
-    get_token_payload,
-)
 from app.db.models import Project, User
 
 from .dto import ProjectCreate, ProjectEdit, ProjectRead
@@ -21,17 +14,17 @@ router = APIRouter(tags=["project"])
 @router.post("/project/create", response_model=ProjectRead)
 async def create_project(
     createReq: ProjectCreate,
-    current_user: Annotated[User, Depends(require_admin)],
+    admin_user: Annotated[User, Depends(require_admin)],
     session: Annotated[Session, Depends(get_session)],
 ) -> ProjectRead:
-    author = current_user.username
-    if any(project.key == createReq.key for project in current_user.projects):
+    author = admin_user.username
+    if any(project.key == createReq.key for project in admin_user.projects):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=apiMessages.projectkey_exists,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    newProject = Project(key=createReq.key, title=createReq.title, author=current_user)
+    newProject = Project(key=createReq.key, title=createReq.title, author=admin_user)
     session.add(newProject)
     session.commit()
 
@@ -47,7 +40,7 @@ async def create_project(
 @router.post("/project/edit", response_model=ProjectRead)
 async def edit_project(
     editReq: ProjectEdit,
-    current_user: Annotated[User, Depends(require_admin)],
+    admin_user: Annotated[User, Depends(require_admin)],
     session: Annotated[Session, Depends(get_session)],
 ) -> ProjectRead:
     newAuthorDb = get_user(editReq.author, session)
@@ -100,6 +93,25 @@ async def read_user_projects(
 
     return myProjects
 
+@router.post("/project/delete/{project_id}")
+async def read_project(
+    project_id: str,
+    admin_user: Annotated[User, Depends(require_admin)],
+    session: Annotated[Session, Depends(get_session)],
+):
+    projectQuery = select(Project).where(Project.public_id == project_id)
+    projectDB = session.execute(projectQuery).scalars().first()
+    if not projectDB:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=apiMessages.project_not_found,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    session.delete(projectDB)
+    session.commit()
+
+    return {"status": apiMessages.project_deleted}
 
 @router.get("/project/{project_id}", response_model=ProjectRead)
 async def read_project(
