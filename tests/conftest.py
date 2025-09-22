@@ -1,12 +1,16 @@
+import os
+import subprocess
+import sys
+
 import pytest
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session
-from app.db.base import Base  # your declarative Base
-from app.core.config import settings
-from app.main import app
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy_utils import create_database, database_exists
+
 from app.api.routes_common import get_session
-import subprocess, os, sys
-from sqlalchemy_utils import database_exists, create_database
+from app.core.config import settings
+from app.db.base import Base  # your declarative Base
+from app.main import app
 
 TEST_DB_URL = settings.database_url
 

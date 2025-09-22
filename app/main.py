@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+
 from .api.routes_health import router as health_router
-from .api.routes_user import router as user_router
 from .api.routes_project import router as project_router
+from .api.routes_user import router as user_router
 
 app = FastAPI(title="Flyswatter API")
 app.include_router(health_router)

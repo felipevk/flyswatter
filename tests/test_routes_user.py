@@ -1,15 +1,18 @@
-from fastapi.testclient import TestClient
-from app.main import app
-from app.api.dto import UserRead, UserCreate, UserEdit
-from app.db.models import User, RefreshToken
-from .conftest import db_session
-from fastapi import status
-from app.api.routes_common import apiMessages, Token
-from app.core.security import get_token_payload
-from sqlalchemy import select, insert
-from freezegun import freeze_time
 from datetime import datetime
+
+from fastapi import status
+from fastapi.testclient import TestClient
+from freezegun import freeze_time
+from sqlalchemy import insert, select
+
+from app.api.dto import UserCreate, UserEdit, UserRead
+from app.api.routes_common import Token, apiMessages
 from app.core.config import settings
+from app.core.security import get_token_payload
+from app.db.models import RefreshToken, User
+from app.main import app
+
+from .conftest import db_session
 
 
 def get_test_token(client, login, password) -> Token:
