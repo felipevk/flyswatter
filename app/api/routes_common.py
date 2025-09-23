@@ -27,6 +27,12 @@ class Messages(BaseModel):
     projectkey_exists: str = "Project key already exists"
     project_not_found: str = "Project not found"
     project_deleted: str = "Project deleted"
+    issuekey_exists: str = "Issue key already exists"
+    issue_not_found: str = "Issue not found"
+    issue_deleted: str = "Issue deleted"
+    assigned_not_found: str = "Issue assigned user not found"
+    comment_not_found: str = "Comment not found"
+    comment_deleted: str = "Comment deleted"
 
 
 apiMessages = Messages()

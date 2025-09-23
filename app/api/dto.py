@@ -47,22 +47,37 @@ class IssueCreate(BaseModel):
     priority: IssuePriority
 
 
-class IssueEdit(IssueCreate):
+class IssueEditIn(IssueCreate):
+    key: str
     status: IssueStatus
+    author_id: str
 
 
-class IssueRead(IssueEdit):
+class IssueEditOut(IssueEditIn):
+    id: str
     created_at: str
     updated_at: str
+
+
+class IssueRead(IssueEditOut):
+    pass
+
 
 class CommentCreate(BaseModel):
     issue_id: str
     body: str
 
-class CommentEdit(CommentCreate):
+
+class CommentEditIn(CommentCreate):
     pass
 
-class CommentRead(CommentCreate):
-    author: str
+
+class CommentEditOut(CommentEditIn):
+    id: str
+    author_id: str
     created_at: str
     updated_at: str
+
+
+class CommentRead(CommentEditOut):
+    pass
