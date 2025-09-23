@@ -1,6 +1,7 @@
 import os
 
 from pydantic import BaseModel
+from typing import Optional
 
 
 def build_db_url() -> str:
@@ -23,6 +24,8 @@ class AuthSettings(BaseModel):
 class Settings(BaseModel):
     database_url: str = build_db_url()
     auth: AuthSettings = AuthSettings()
+    env: str = os.getenv("APP_ENV", "")
+    sentry_dsn: Optional[str] =  os.getenv("SENTRY_DSN", None)
 
 
 settings = Settings()
