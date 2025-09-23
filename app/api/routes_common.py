@@ -33,6 +33,7 @@ class Messages(BaseModel):
     assigned_not_found: str = "Issue assigned user not found"
     comment_not_found: str = "Comment not found"
     comment_deleted: str = "Comment deleted"
+    user_not_author: str = "Only the author can perform this operation"
 
 
 apiMessages = Messages()

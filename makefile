@@ -2,7 +2,7 @@ DB_SERVICE ?= db
 API_SERVICE ?= api
 TEST_DB ?= appdb_test
 
-.PHONY: db-up db-down db-create-test db-drop-test test psql-dev psql-test migrate-dev migrate-base-dev revision lint lint-check
+.PHONY: db-up db-down db-create-test db-drop-test test test-v psql-dev psql-test migrate-dev migrate-base-dev revision lint lint-check
 
 db-up:
 	docker compose up -d db
@@ -25,6 +25,9 @@ db-drop-test: db-up
 test: db-up
 	# load .env.test into the environment and run pytest from host
 	ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -q'
+
+test-v: db-up
+	ENV=.env.test bash -lc 'set -a; source $$ENV; set +a; poetry run pytest -s'
 
 psql:
 	docker compose exec db bash -lc 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'

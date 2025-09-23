@@ -182,5 +182,5 @@ async def read_issue(
         priority=issueDB.priority,
         status=issueDB.status,
         created_at=issueDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
-        updated_at=issueDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
+        updated_at=issueDB.updated_at.strftime("%a %d %b %Y, %I:%M%p")
     )
