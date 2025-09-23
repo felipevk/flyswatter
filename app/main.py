@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from uuid import uuid4
+import sentry_sdk
 
 from .api.routes_comment import router as comment_router
 from .api.routes_health import router as health_router
@@ -6,6 +8,8 @@ from .api.routes_issue import router as issue_router
 from .api.routes_project import router as project_router
 from .api.routes_user import router as user_router
 from .api.routes_sentry import router as sentry_router
+
+from app.core.config import settings
 
 app = FastAPI(title="Flyswatter API")
 app.include_router(health_router)
@@ -19,3 +23,13 @@ app.include_router(sentry_router)
 @app.get("/")
 def root():
     return {"ok": True}
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid4()))
+    if settings.sentry.sentry_dsn:
+        with sentry_sdk.configure_scope() as scope:
+                scope.set_tag("request_id", request_id)
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
