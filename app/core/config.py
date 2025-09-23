@@ -20,12 +20,16 @@ class AuthSettings(BaseModel):
     accessTTL: int = int(os.getenv("ACCESS_TTL_MIN", ""))
     refreshTTL: int = int(os.getenv("REFRESH_TTL_DAYS", ""))
 
+class SentrySettings(BaseModel):
+    sentry_dsn: Optional[str] =  os.getenv("SENTRY_DSN", None)
+    sample_rate: Optional[str] =  os.getenv("SENTRY_SAMPLE_RATE", 1.0)
+
 
 class Settings(BaseModel):
     database_url: str = build_db_url()
     auth: AuthSettings = AuthSettings()
     env: str = os.getenv("APP_ENV", "")
-    sentry_dsn: Optional[str] =  os.getenv("SENTRY_DSN", None)
+    sentry: SentrySettings = SentrySettings()
 
 
 settings = Settings()

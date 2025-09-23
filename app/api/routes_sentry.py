@@ -6,10 +6,10 @@ import sentry_sdk
 
 router = APIRouter(tags=["sentry"])
 
-if settings.sentry_dsn:
+if settings.sentry.sentry_dsn:
     sentry_sdk.init(
-            dsn=settings.sentry_dsn,
-            traces_sample_rate=1.0,
+            dsn=settings.sentry.sentry_dsn,
+            traces_sample_rate=settings.sentry.sample_rate,
             environment=settings.env,
         )
 
