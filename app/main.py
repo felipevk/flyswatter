@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from prometheus_client import make_asgi_app
 from uuid import uuid4
 import sentry_sdk
 
@@ -10,6 +11,7 @@ from .api.routes_user import router as user_router
 from .api.routes_sentry import router as sentry_router
 
 from app.core.config import settings
+from app.core.metrics import inc_request_count
 
 app = FastAPI(title="Flyswatter API")
 app.include_router(health_router)
@@ -18,7 +20,7 @@ app.include_router(project_router)
 app.include_router(issue_router)
 app.include_router(comment_router)
 app.include_router(sentry_router)
-    
+app.mount("/metrics", make_asgi_app())
 
 @app.get("/")
 def root():
@@ -32,4 +34,5 @@ async def add_request_id(request: Request, call_next):
                 scope.set_tag("request_id", request_id)
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+    inc_request_count(request, response)
     return response
