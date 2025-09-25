@@ -1,5 +1,5 @@
-# flyswatter
-:bug:Issue Tracker API made with FastAPI and PostgreSQL
+# [flyswatter](https://flyswatter-api.onrender.com/docs) [![Run tests and linting](https://github.com/felipevk/flyswatter/actions/workflows/makefile.yml/badge.svg)](https://github.com/felipevk/flyswatter/actions/workflows/makefile.yml) [![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
+:bug:Issue Tracker API made with FastAPI and PostgreSQL.
 
 ## Features
 - Bug Tracking
