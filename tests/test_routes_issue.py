@@ -7,12 +7,12 @@ from sqlalchemy import insert, select
 from app.api.dto import IssueCreate, IssueEditIn, IssueEditOut, IssueRead
 from app.api.routes_common import Token, apiMessages
 from app.core.config import settings
-from app.db.models import Project, Issue, IssuePriority, IssueStatus,User
+from app.db.models import Issue, IssuePriority, IssueStatus, Project, User
 from app.main import app
 
 from .conftest import db_session
-
 from .test_routes_common import *
+
 
 def test_createissue_success(db_session):
     c = TestClient(app)
@@ -22,7 +22,7 @@ def test_createissue_success(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -30,16 +30,11 @@ def test_createissue_success(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     db_session.commit()
     login = userDB.username
@@ -50,7 +45,7 @@ def test_createissue_success(db_session):
         title="New Issue",
         description="An issue has been found",
         assignee_id=anotherUserDB.public_id,
-        priority=IssuePriority.MEDIUM
+        priority=IssuePriority.MEDIUM,
     )
     toExpect = IssueRead(
         id="",
@@ -63,12 +58,12 @@ def test_createissue_success(db_session):
         status=IssueStatus.OPEN,
         key=f"{projectDB.key}-1",
         created_at="",
-        updated_at=""
+        updated_at="",
     )
     r = c.post(
         "/issue/create",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toCreate.model_dump()
+        json=toCreate.model_dump(),
     )
     data = IssueRead(**r.json())
 
@@ -85,6 +80,7 @@ def test_createissue_success(db_session):
     assert data.created_at is not None
     assert data.description is not None
 
+
 def test_createissue_assignednotfound(db_session):
     c = TestClient(app)
     userDB = User(
@@ -93,7 +89,7 @@ def test_createissue_assignednotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -101,16 +97,11 @@ def test_createissue_assignednotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     db_session.commit()
     login = userDB.username
@@ -121,16 +112,17 @@ def test_createissue_assignednotfound(db_session):
         title="New Issue",
         description="An issue has been found",
         assignee_id="Invalid",
-        priority=IssuePriority.MEDIUM
+        priority=IssuePriority.MEDIUM,
     )
     r = c.post(
         "/issue/create",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toCreate.model_dump()
+        json=toCreate.model_dump(),
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.assigned_not_found
+
 
 def test_readissue_success(db_session):
     c = TestClient(app)
@@ -140,7 +132,7 @@ def test_readissue_success(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -148,16 +140,11 @@ def test_readissue_success(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -168,7 +155,7 @@ def test_readissue_success(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -186,11 +173,11 @@ def test_readissue_success(db_session):
         status=issueDB.status,
         key=f"{projectDB.key}-{issueDB.key}",
         created_at="",
-        updated_at=""
+        updated_at="",
     )
     r = c.get(
         f"/issue/{issueDB.public_id}",
-        headers={"Authorization": f"Bearer {token.access_token}"}
+        headers={"Authorization": f"Bearer {token.access_token}"},
     )
     data = IssueRead(**r.json())
 
@@ -207,6 +194,7 @@ def test_readissue_success(db_session):
     assert data.created_at is not None
     assert data.description is not None
 
+
 def test_readissue_issuenotfound(db_session):
     c = TestClient(app)
     userDB = User(
@@ -215,7 +203,7 @@ def test_readissue_issuenotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -223,16 +211,11 @@ def test_readissue_issuenotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -243,7 +226,7 @@ def test_readissue_issuenotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -261,24 +244,26 @@ def test_readissue_issuenotfound(db_session):
         status=issueDB.status,
         key=f"{projectDB.key}-{issueDB.key}",
         created_at="",
-        updated_at=""
+        updated_at="",
     )
-    invalidId="Invalid"
+    invalidId = "Invalid"
     r = c.get(
-        f"/issue/{invalidId}",
-        headers={"Authorization": f"Bearer {token.access_token}"}
+        f"/issue/{invalidId}", headers={"Authorization": f"Bearer {token.access_token}"}
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.issue_not_found
 
+
 def xtest_readuserissues_success(db_session):
     c = TestClient(app)
     assert False
 
+
 def xtest_readuserissues_issuenotfound(db_session):
     c = TestClient(app)
     assert False
+
 
 def test_editissue_success(db_session):
     c = TestClient(app)
@@ -288,7 +273,7 @@ def test_editissue_success(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -296,16 +281,11 @@ def test_editissue_success(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -316,7 +296,7 @@ def test_editissue_success(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -331,7 +311,7 @@ def test_editissue_success(db_session):
         author_id=issueDB.author.public_id,
         priority=IssuePriority.MEDIUM,
         key=issueDB.key,
-        status=issueDB.status
+        status=issueDB.status,
     )
     toExpect = IssueEditOut(
         id=issueDB.public_id,
@@ -344,12 +324,12 @@ def test_editissue_success(db_session):
         status=toEdit.status,
         key=f"{issueDB.project.key}-{toEdit.key}",
         created_at="",
-        updated_at=""
+        updated_at="",
     )
     r = c.post(
         f"/issue/edit/{issueDB.public_id}",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toEdit.model_dump()
+        json=toEdit.model_dump(),
     )
     data = IssueEditOut(**r.json())
 
@@ -366,6 +346,7 @@ def test_editissue_success(db_session):
     assert data.created_at is not None
     assert data.description is not None
 
+
 def test_editissue_issuenotfound(db_session):
     c = TestClient(app)
     userDB = User(
@@ -374,7 +355,7 @@ def test_editissue_issuenotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -382,16 +363,11 @@ def test_editissue_issuenotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -402,7 +378,7 @@ def test_editissue_issuenotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -417,17 +393,18 @@ def test_editissue_issuenotfound(db_session):
         author_id=issueDB.assigned.public_id,
         priority=IssuePriority.MEDIUM,
         key=issueDB.key,
-        status=issueDB.status
+        status=issueDB.status,
     )
     invalidId = "Invalid"
     r = c.post(
         f"/issue/edit/{invalidId}",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toEdit.model_dump()
+        json=toEdit.model_dump(),
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.issue_not_found
+
 
 def test_editissue_authornotfound(db_session):
     c = TestClient(app)
@@ -437,7 +414,7 @@ def test_editissue_authornotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -445,16 +422,11 @@ def test_editissue_authornotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -465,7 +437,7 @@ def test_editissue_authornotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -480,16 +452,17 @@ def test_editissue_authornotfound(db_session):
         author_id="Invalid",
         priority=IssuePriority.MEDIUM,
         key=issueDB.key,
-        status=issueDB.status
+        status=issueDB.status,
     )
     r = c.post(
         f"/issue/edit/{issueDB.public_id}",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toEdit.model_dump()
+        json=toEdit.model_dump(),
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == f"User {toEdit.author_id} not found"
+
 
 def test_editissue_assignednotfound(db_session):
     c = TestClient(app)
@@ -499,7 +472,7 @@ def test_editissue_assignednotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -507,16 +480,11 @@ def test_editissue_assignednotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -527,7 +495,7 @@ def test_editissue_assignednotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -542,16 +510,17 @@ def test_editissue_assignednotfound(db_session):
         author_id=issueDB.author.public_id,
         priority=IssuePriority.MEDIUM,
         key=issueDB.key,
-        status=issueDB.status
+        status=issueDB.status,
     )
     r = c.post(
         f"/issue/edit/{issueDB.public_id}",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toEdit.model_dump()
+        json=toEdit.model_dump(),
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == f"User {toEdit.assignee_id} not found"
+
 
 def test_editissue_projectnotfound(db_session):
     c = TestClient(app)
@@ -561,7 +530,7 @@ def test_editissue_projectnotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -569,16 +538,11 @@ def test_editissue_projectnotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -589,7 +553,7 @@ def test_editissue_projectnotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -604,20 +568,22 @@ def test_editissue_projectnotfound(db_session):
         author_id=issueDB.author.public_id,
         priority=IssuePriority.MEDIUM,
         key=issueDB.key,
-        status=issueDB.status
+        status=issueDB.status,
     )
     r = c.post(
         f"/issue/edit/{issueDB.public_id}",
         headers={"Authorization": f"Bearer {token.access_token}"},
-        json=toEdit.model_dump()
+        json=toEdit.model_dump(),
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == f"Project {toEdit.project_id} not found"
 
+
 def xtest_resolveissue_success(db_session):
     c = TestClient(app)
     assert False
+
 
 def test_deleteissue_success(db_session):
     c = TestClient(app)
@@ -627,7 +593,7 @@ def test_deleteissue_success(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -635,16 +601,11 @@ def test_deleteissue_success(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -655,7 +616,7 @@ def test_deleteissue_success(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -664,12 +625,13 @@ def test_deleteissue_success(db_session):
     token = get_test_token(c, login, password)
     r = c.post(
         f"/issue/delete/{issueDB.public_id}",
-        headers={"Authorization": f"Bearer {token.access_token}"}
+        headers={"Authorization": f"Bearer {token.access_token}"},
     )
 
     assert r.status_code == status.HTTP_200_OK
     assert r.json()["status"] == apiMessages.issue_deleted
-    
+
+
 def test_deleteissue_issuenotfound(db_session):
     c = TestClient(app)
     userDB = User(
@@ -678,7 +640,7 @@ def test_deleteissue_issuenotfound(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -686,16 +648,11 @@ def test_deleteissue_issuenotfound(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -706,7 +663,7 @@ def test_deleteissue_issuenotfound(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -716,12 +673,13 @@ def test_deleteissue_issuenotfound(db_session):
     invalidId = "Invalid"
     r = c.post(
         f"/issue/delete/{invalidId}",
-        headers={"Authorization": f"Bearer {token.access_token}"}
+        headers={"Authorization": f"Bearer {token.access_token}"},
     )
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.issue_not_found
-    
+
+
 def test_deleteissue_usernotadmin(db_session):
     c = TestClient(app)
     userDB = User(
@@ -730,7 +688,7 @@ def test_deleteissue_usernotadmin(db_session):
         email="jdoetestuser@test.com",
         name="John Doe Test",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=True
+        admin=True,
     )
     anotherUserDB = User(
         id=None,
@@ -738,16 +696,11 @@ def test_deleteissue_usernotadmin(db_session):
         email="anotheruser@test.com",
         name="Another User",
         pass_hash="$2b$12$C/ZIa0h6IbTLG0aR1lkzCu0S26wbELjeNkFv/frObFmuVYrBPkgzO",
-        admin=False
+        admin=False,
     )
     db_session.add(userDB)
     db_session.add(anotherUserDB)
-    projectDB = Project(
-        id=None,
-        title="Test Project",
-        key="PROJ",
-        author=userDB
-    )
+    projectDB = Project(id=None, title="Test Project", key="PROJ", author=userDB)
     db_session.add(projectDB)
     issueDB = Issue(
         id=None,
@@ -758,7 +711,7 @@ def test_deleteissue_usernotadmin(db_session):
         priority=IssuePriority.MEDIUM,
         project=projectDB,
         author=userDB,
-        assigned=anotherUserDB
+        assigned=anotherUserDB,
     )
     db_session.add(issueDB)
     db_session.commit()
@@ -769,7 +722,7 @@ def test_deleteissue_usernotadmin(db_session):
     db_session.commit()
     r = c.post(
         f"/issue/delete/{issueDB.public_id}",
-        headers={"Authorization": f"Bearer {token.access_token}"}
+        headers={"Authorization": f"Bearer {token.access_token}"},
     )
 
     assert r.status_code == status.HTTP_403_FORBIDDEN

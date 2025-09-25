@@ -154,7 +154,7 @@ async def delete_user(
 
     session.delete(userDB)
     session.commit()
-    
+
     return {"status": apiMessages.user_deleted}
 
 

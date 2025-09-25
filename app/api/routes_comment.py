@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import insert, select, update
 
-from app.db.models import User, Issue, Comment
+from app.db.models import Comment, Issue, User
 
 from .dto import CommentCreate, CommentEditIn, CommentEditOut, CommentRead
 from .routes_common import *
@@ -26,22 +26,19 @@ async def create_comment(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    newComment = Comment(
-        body = createReq.body,
-        author = current_user,
-        issue = issueDB
-    )
+    newComment = Comment(body=createReq.body, author=current_user, issue=issueDB)
     session.add(newComment)
     session.commit()
 
     return CommentRead(
-        id = newComment.public_id,
-        issue_id = newComment.issue.public_id,
-        body = newComment.body,
-        author_id = newComment.author.public_id,
-        created_at = newComment.created_at.strftime("%a %d %b %Y, %I:%M%p"),
-        updated_at= newComment.updated_at.strftime("%a %d %b %Y, %I:%M%p")
+        id=newComment.public_id,
+        issue_id=newComment.issue.public_id,
+        body=newComment.body,
+        author_id=newComment.author.public_id,
+        created_at=newComment.created_at.strftime("%a %d %b %Y, %I:%M%p"),
+        updated_at=newComment.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )
+
 
 @router.get("/comment/mine", response_model=list[CommentRead])
 async def read_user_comments(
@@ -50,6 +47,7 @@ async def read_user_comments(
 ) -> list[CommentRead]:
     pass
 
+
 @router.get("/comment/issue/{issue_id}", response_model=list[CommentRead])
 async def read_issue_comments(
     issue_id: str,
@@ -57,6 +55,7 @@ async def read_issue_comments(
     session: Annotated[Session, Depends(get_session)],
 ) -> list[CommentRead]:
     pass
+
 
 @router.post("/comment/edit/{comment_id}", response_model=CommentEditOut)
 async def edit_comment(
@@ -73,7 +72,9 @@ async def edit_comment(
             detail=apiMessages.comment_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    isAdminOrAuthor = current_user.admin or commentDB.author.public_id == current_user.public_id
+    isAdminOrAuthor = (
+        current_user.admin or commentDB.author.public_id == current_user.public_id
+    )
     if not isAdminOrAuthor:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -94,13 +95,14 @@ async def edit_comment(
     session.commit()
 
     return CommentEditOut(
-        id = commentDB.public_id,
-        issue_id = commentDB.issue.public_id,
-        body = commentDB.body,
-        author_id = commentDB.author.public_id,
-        created_at = commentDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
-        updated_at= commentDB.updated_at.strftime("%a %d %b %Y, %I:%M%p")
+        id=commentDB.public_id,
+        issue_id=commentDB.issue.public_id,
+        body=commentDB.body,
+        author_id=commentDB.author.public_id,
+        created_at=commentDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
+        updated_at=commentDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )
+
 
 @router.post("/comment/delete/{comment_id}")
 async def delete_comment(
@@ -116,7 +118,9 @@ async def delete_comment(
             detail=apiMessages.comment_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    isAdminOrAuthor = current_user.admin or commentDB.author.public_id == current_user.public_id
+    isAdminOrAuthor = (
+        current_user.admin or commentDB.author.public_id == current_user.public_id
+    )
     if not isAdminOrAuthor:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -127,6 +131,7 @@ async def delete_comment(
     session.delete(commentDB)
 
     return {"status": apiMessages.comment_deleted}
+
 
 @router.get("/comment/{comment_id}", response_model=CommentRead)
 async def read_comment(
@@ -144,10 +149,10 @@ async def read_comment(
         )
 
     return CommentRead(
-        id = commentDB.public_id,
-        issue_id = commentDB.issue.public_id,
-        body = commentDB.body,
-        author_id = commentDB.author.public_id,
-        created_at = commentDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
-        updated_at= commentDB.updated_at.strftime("%a %d %b %Y, %I:%M%p")
+        id=commentDB.public_id,
+        issue_id=commentDB.issue.public_id,
+        body=commentDB.body,
+        author_id=commentDB.author.public_id,
+        created_at=commentDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
+        updated_at=commentDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )

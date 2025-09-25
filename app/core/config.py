@@ -1,7 +1,7 @@
 import os
+from typing import Optional
 
 from pydantic import BaseModel
-from typing import Optional
 
 
 def build_db_url() -> str:
@@ -20,9 +20,10 @@ class AuthSettings(BaseModel):
     accessTTL: int = int(os.getenv("ACCESS_TTL_MIN", ""))
     refreshTTL: int = int(os.getenv("REFRESH_TTL_DAYS", ""))
 
+
 class SentrySettings(BaseModel):
-    sentry_dsn: Optional[str] =  os.getenv("SENTRY_DSN", None)
-    sample_rate: Optional[str] =  os.getenv("SENTRY_SAMPLE_RATE", 1.0)
+    sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN", None)
+    sample_rate: Optional[str] = os.getenv("SENTRY_SAMPLE_RATE", 1.0)
 
 
 class Settings(BaseModel):

@@ -83,7 +83,7 @@ class Project(Base):
     public_id: Mapped[str] = mapped_column(
         String(32), unique=True, nullable=False, index=True, default=lambda: uuid4().hex
     )
-    #TODO make key and title not unique
+    # TODO make key and title not unique
     title: Mapped[str] = mapped_column(unique=True, nullable=False)
     key: Mapped[str] = mapped_column(String(4), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

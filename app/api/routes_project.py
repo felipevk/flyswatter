@@ -93,6 +93,7 @@ async def read_user_projects(
 
     return myProjects
 
+
 @router.post("/project/delete/{project_id}")
 async def read_project(
     project_id: str,
@@ -107,11 +108,12 @@ async def read_project(
             detail=apiMessages.project_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     session.delete(projectDB)
     session.commit()
 
     return {"status": apiMessages.project_deleted}
+
 
 @router.get("/project/{project_id}", response_model=ProjectRead)
 async def read_project(

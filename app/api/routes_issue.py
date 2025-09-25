@@ -1,11 +1,11 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, insert, select, update, Integer
+from sqlalchemy import Integer, func, insert, select, update
 
-from app.db.models import Project, User, Issue, IssuePriority, IssueStatus
+from app.db.models import Issue, IssuePriority, IssueStatus, Project, User
 
-from .dto import IssueCreate, IssueRead, IssueEditIn, IssueEditOut
+from .dto import IssueCreate, IssueEditIn, IssueEditOut, IssueRead
 from .routes_common import *
 
 router = APIRouter(tags=["issue"])
@@ -29,18 +29,21 @@ async def create_issue(
             detail=apiMessages.assigned_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    highestKeyQuery = select(func.max(Issue.key.cast(Integer))).where(Issue.project_id == projectDB.id)
+    highestKeyQuery = select(func.max(Issue.key.cast(Integer))).where(
+        Issue.project_id == projectDB.id
+    )
     highestKey = session.execute(highestKeyQuery).first()[0]
     newKey = highestKey + 1 if highestKey is not None else 1
     newIssue = Issue(
-        key=newKey, 
+        key=newKey,
         title=createReq.title,
         description=createReq.description,
         status=IssueStatus.OPEN,
         priority=createReq.priority,
         project=projectDB,
         author=current_user,
-        assigned=assignedUserDB)
+        assigned=assignedUserDB,
+    )
     session.add(newIssue)
     session.commit()
 
@@ -58,12 +61,14 @@ async def create_issue(
         updated_at=newIssue.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )
 
+
 @router.get("/issue/mine", response_model=list[IssueRead])
 async def read_user_issues(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[IssueRead]:
     pass
+
 
 @router.post("/issue/edit/{issue_id}", response_model=IssueEditOut)
 async def edit_issue(
@@ -128,6 +133,7 @@ async def edit_issue(
         updated_at=issueDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )
 
+
 @router.post("/issue/resolve/{issue_id}", response_model=IssueRead)
 async def resolve_issue(
     issue_id: str,
@@ -135,6 +141,7 @@ async def resolve_issue(
     session: Annotated[Session, Depends(get_session)],
 ) -> IssueRead:
     pass
+
 
 @router.post("/issue/delete/{issue_id}")
 async def delete_issue(
@@ -150,11 +157,12 @@ async def delete_issue(
             detail=apiMessages.issue_not_found,
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     session.delete(issueDB)
     session.commit()
 
     return {"status": apiMessages.issue_deleted}
+
 
 @router.get("/issue/{issue_id}", response_model=IssueRead)
 async def read_issue(
@@ -182,5 +190,5 @@ async def read_issue(
         priority=issueDB.priority,
         status=issueDB.status,
         created_at=issueDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
-        updated_at=issueDB.updated_at.strftime("%a %d %b %Y, %I:%M%p")
+        updated_at=issueDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
     )

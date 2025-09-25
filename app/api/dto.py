@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from app.db.models import IssueStatus, IssuePriority
+
+from app.db.models import IssuePriority, IssueStatus
+
 
 class UserCreate(BaseModel):
     username: str
