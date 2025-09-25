@@ -7,6 +7,7 @@
 - API with CRUD operations such as <sub>/user/create</sub> <sub>/user/{user_id}</sub> <sub>/user/all</sub> <sub>/issue/edit/{issue_id}</sub>.
 - All endpoints can be accessed at <sub>/docs</sub> using Swagger UI
 - Errors logged in Sentry, metrics can be observed by Prometheus from <sub>/metrics</sub>
+- Extensive suite of tests using pytest
 
 ## Setup
 Create .env file following [.env.example](.env.example)
