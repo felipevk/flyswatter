@@ -2,7 +2,7 @@ DB_SERVICE ?= db
 API_SERVICE ?= api
 TEST_DB ?= appdb_test
 
-.PHONY: db-up db-down db-create-test db-drop-test test test-v psql-dev psql-test migrate-dev migrate-base-dev revision lint lint-check
+.PHONY: db-up db-down db-create-test db-drop-test test test-v psql-dev psql-test migrate-dev migrate-base-dev revision lint lint-check demo
 
 db-up:
 	docker compose up -d db
@@ -52,3 +52,7 @@ lint:
 lint-check:
 	poetry run black --check .
 	poetry run isort . -c --profile black
+
+demo:
+	poetry run alembic upgrade head
+	poetry run dotenv run -- python demo.py
