@@ -13,8 +13,8 @@ Create .env file following [.env.example](.env.example)
 ```
 pip install --no-cache-dir poetry
 poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
-poetry run dotenv run -- python -m app.db.create_database
 docker compose up --build -d
+poetry run dotenv run -- python -m app.db.create_database
 make demo
 ```
 
