@@ -24,23 +24,26 @@ class JobRead(JobBasic):
     result_kind: JobResultKind | None = None
     artifact_id: int | None = None
 
-    def __init__(self, jobDB : Job):
-        self.id=jobDB.public_id,
-        self.user_id=jobDB.user.public_id,
-        self.job_type=jobDB.job_type,
-        self.status=jobDB.state,
-        self.attempts=jobDB.attempts,
+def jobReadFrom(jobDB : Job)->JobRead:
+    return JobRead(
+        id=jobDB.public_id,
+        user_id=jobDB.user.public_id,
+        job_type=jobDB.job_type,
+        status=jobDB.state,
+        attempts=jobDB.attempts,
         
-        self.started_at=jobDB.started_at.strftime("%a %d %b %Y, %I:%M%p") if jobDB.started_at is not None else None,
-        self.updated_at=jobDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
-        self.finished_at=jobDB.finished_at.strftime("%a %d %b %Y, %I:%M%p") if jobDB.finished_at is not None else None,
+        started_at=jobDB.started_at.strftime("%a %d %b %Y, %I:%M%p") if jobDB.started_at is not None else None,
+        updated_at=jobDB.updated_at.strftime("%a %d %b %Y, %I:%M%p"),
+        finished_at=jobDB.finished_at.strftime("%a %d %b %Y, %I:%M%p") if jobDB.finished_at is not None else None,
 
-        self.last_error = jobDB.last_error,
-        self.error_kind = jobDB.error_kind,
-        self.error_payload = jobDB.error_payload,
+        last_error = jobDB.last_error,
+        error_kind = jobDB.error_kind,
+        error_payload = jobDB.error_payload,
 
-        self.result_kind = jobDB.result_kind,
-        self.artifact_id = jobDB.artifact_id,
+        result_kind = jobDB.result_kind,
+        artifact_id = jobDB.artifact_id,
+    )
+    
 
 class UserCreate(BaseModel):
     username: str

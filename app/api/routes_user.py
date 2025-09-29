@@ -216,7 +216,7 @@ async def read_all_users(
 
     return result
 
-@router.get("/user/report", response_model=UserReport)
+@router.post("/user/report", response_model=UserReport)
 async def generate_report(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
