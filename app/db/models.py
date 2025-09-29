@@ -202,7 +202,7 @@ class Artifact(Base):
     __tablename__ = "artifacts"
     id: Mapped[int] = mapped_column(primary_key=True)
     public_id: Mapped[str] = mapped_column(
-        String(32), unique=True, nullable=False, index=True
+        String(32), unique=True, nullable=False, index=True, default=lambda: uuid4().hex
     )
     job: Mapped["Job"] = relationship(back_populates="artifact")
 
@@ -211,7 +211,7 @@ class Job(Base):
     __tablename__ = "jobs"
     id: Mapped[int] = mapped_column(primary_key=True)
     public_id: Mapped[str] = mapped_column(
-        String(32), unique=True, nullable=False, index=True
+        String(32), unique=True, nullable=False, index=True, default=lambda: uuid4().hex
     )
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

@@ -13,9 +13,10 @@ from app.core.security import (
     get_password_hash,
     get_token_expiry,
 )
-from app.db.models import RefreshToken, User
+from app.db.models import RefreshToken, User, Job, JobState
+from app.db.factory import create_job, create_request_hash
 
-from .dto import UserCreate, UserEdit, UserRead
+from .dto import UserCreate, UserEdit, UserRead, UserReport
 from .routes_common import *
 
 router = APIRouter(tags=["user"])
@@ -214,6 +215,39 @@ async def read_all_users(
         )
 
     return result
+
+@router.get("/user/report", response_model=UserReport)
+async def generate_report(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_session)],
+    idem_key: Annotated[str, Depends(require_idempotency_key)]
+) ->UserReport:
+
+    request_hash = create_request_hash(None, None)
+    
+    existingJobQuery = select(Job).where(
+        Job.user_id == current_user.id,
+        Job.idempotency_key == idem_key,
+        Job.request_hash == request_hash
+    )
+    jobDB = session.execute(existingJobQuery).scalars().first()
+    if not jobDB:
+        jobDB = create_job(
+            current_user, 
+            job_type="generate-report",
+            idempotency_key = idem_key
+        )
+
+        # TODO add to queue
+        session.add(jobDB)
+        session.commit()
+
+    return UserReport(
+        id=jobDB.public_id, 
+        user_id=jobDB.user.public_id,
+        job_type=jobDB.job_type,
+        status=jobDB.state
+    )
 
 
 @router.get("/user/{user_id}", response_model=UserRead)

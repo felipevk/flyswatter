@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -34,6 +34,8 @@ class Messages(BaseModel):
     comment_not_found: str = "Comment not found"
     comment_deleted: str = "Comment deleted"
     user_not_author: str = "Only the author can perform this operation"
+    requires_idempotency_key: str = "Idempotency-Key header required"
+    job_not_found: str = "Job not found"
 
 
 apiMessages = Messages()
@@ -112,3 +114,12 @@ async def require_admin(
             status_code=status.HTTP_403_FORBIDDEN, detail=apiMessages.requires_admin
         )
     return current_user
+
+async def require_idempotency_key(
+    idem_key: str = Header(alias="Idempotency-Key")
+)->str:
+    if not idem_key:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=apiMessages.requires_admin
+        )
+    return idem_key
