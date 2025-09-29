@@ -1,22 +1,24 @@
 import enum
 from datetime import datetime
-from typing import List
+from typing import List, Any, Mapping
 from uuid import uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
 
 
-class IssueStatus(str, enum.Enum):
+class IssueStatus(enum.StrEnum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
     CLOSED = "closed"
 
 
-class IssuePriority(str, enum.Enum):
+class IssuePriority(enum.StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -28,6 +30,17 @@ class MembershipRole(enum.Enum):
     MAINTAINER = "maintainer"
     REPORTER = "reporter"
     VIEWER = "viewer"
+
+
+class JobState(enum.StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+class JobResultKind(enum.StrEnum):
+    ARTIFACT = "artifact"
+    ENTITY = "entity"
 
 
 class User(Base):
@@ -72,6 +85,8 @@ class User(Base):
     refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+
+    jobs: Mapped[List["Job"]] = relationship(back_populates="user")
 
 
 class Project(Base):
@@ -181,3 +196,61 @@ class RefreshToken(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
     user: Mapped["User"] = relationship(back_populates="refresh_tokens")
+
+
+class Artifact(Base):
+    __tablename__ = "artifacts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(
+        String(32), unique=True, nullable=False, index=True
+    )
+    job: Mapped["Job"] = relationship(back_populates="artifact")
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    public_id: Mapped[str] = mapped_column(
+        String(32), unique=True, nullable=False, index=True
+    )
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="jobs")
+
+    job_type: Mapped[str] = mapped_column(nullable=False)
+    state: Mapped[JobState] = mapped_column(
+        Enum(JobState, name="job_state_enum"),
+        nullable=False
+    )
+    attempts: Mapped[int] = mapped_column(nullable=False, default=0)
+
+    started_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # last error message
+    last_error: Mapped[str|None] = mapped_column(nullable=True)
+    error_kind: Mapped[str|None] = mapped_column(nullable=True)
+    # JSONB is not a python type, so it can't be used in the type hint
+    # We need it to be MutableDict because SQLAlchemy doesn't detect field changes by default, only reassignment
+    error_payload: Mapped[Mapping[str, Any]|None] = mapped_column(MutableDict.as_mutable(JSONB), nullable=True)
+
+    idempotency_key: Mapped[str] = mapped_column(
+        String(32), unique=True, nullable=False, index=True
+    )
+    request_hash: Mapped[str] = mapped_column(nullable=False)
+
+    # Since there's a chance new enum types will be introduced, do to map it to enum on db
+    # instead store as VARCHAR, reject unknown values
+    # in the db the validation is done by a CHECK constraint which in this case is named ck_result_kind
+    result_kind: Mapped[JobResultKind|None] = mapped_column(
+        Enum(JobResultKind, native_enum=False,
+           validate_strings=True,          
+           name="ck_result_kind"),    
+        nullable=True
+    )
+
+    artifact_id: Mapped[int|None] = mapped_column(ForeignKey("artifacts.id"), nullable=True)
+    # Mapped["Artifact"|None] wouldn't work because it can't figure out it's an optional class
+    # Had to change to direct class reference and define Artifact before so it can find it
+    artifact: Mapped[Artifact|None] = relationship(back_populates="job")
