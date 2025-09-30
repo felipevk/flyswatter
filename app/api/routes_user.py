@@ -19,6 +19,8 @@ from app.db.factory import create_job, create_request_hash
 from .dto import UserCreate, UserEdit, UserRead, UserReport
 from .routes_common import *
 
+from app.worker.tasks import generate_report
+
 router = APIRouter(tags=["user"])
 
 
@@ -217,7 +219,7 @@ async def read_all_users(
     return result
 
 @router.post("/user/report", response_model=UserReport)
-async def generate_report(
+async def generate_report_job(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
     idem_key: Annotated[str, Depends(require_idempotency_key)]
@@ -238,9 +240,12 @@ async def generate_report(
             idempotency_key = idem_key
         )
 
-        # TODO add to queue
         session.add(jobDB)
         session.commit()
+        generate_report.apply_async(
+            args=[jobDB.public_id, jobDB.user.public_id],
+            queue="pdfs"
+        )
 
     return UserReport(
         id=jobDB.public_id, 
