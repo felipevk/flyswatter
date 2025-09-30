@@ -9,7 +9,7 @@ from app.db.models import IssuePriority, IssueStatus
 
 def seed_db():
     create_db()
-    engine = create_engine(settings.database_url, future=True)
+    engine = create_engine(settings.database.build_url(), future=True)
     Session = sessionmaker(bind=engine, expire_on_commit=False, future=True)
     demoSession = Session()
 
@@ -365,7 +365,7 @@ def seed_db():
         "comments": len(comments),
     }
     print(
-        f"Successfully created in {settings.database_url}:\n{created["users"]} users\n{created["projects"]} projects\n{created["issues"]} issues\n{created["comments"]} comments"
+        f"Successfully created in {settings.database.build_url()}:\n{created["users"]} users\n{created["projects"]} projects\n{created["issues"]} issues\n{created["comments"]} comments"
     )
 
 

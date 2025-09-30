@@ -5,8 +5,8 @@ from app.core.config import settings
 
 
 def create_db():
-    print(f"Creating db at {settings.database_url}")
-    engine = create_engine(settings.database_url, future=True)
+    print(f"Creating db at {settings.database.build_url()}")
+    engine = create_engine(settings.database.build_url(), future=True)
     if not database_exists(engine.url):
         create_database(engine.url)
 

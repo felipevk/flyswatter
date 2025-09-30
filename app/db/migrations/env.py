@@ -24,7 +24,7 @@ db_url = os.getenv("DATABASE_URL")
 if db_url:
     config.set_main_option("sqlalchemy.url", db_url)
 else:
-    config.set_main_option("sqlalchemy.url", settings.database_url)
+    config.set_main_option("sqlalchemy.url", settings.database.build_url())
 
 # add your model's MetaData object here
 # for 'autogenerate' support

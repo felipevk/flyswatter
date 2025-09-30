@@ -12,7 +12,7 @@ from app.core.config import settings
 from app.db.base import Base  # your declarative Base
 from app.main import app
 
-TEST_DB_URL = settings.database_url
+TEST_DB_URL = settings.database.build_url()
 
 
 @pytest.fixture(scope="session", autouse=True)
