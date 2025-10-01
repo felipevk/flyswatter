@@ -89,7 +89,7 @@ def generate_monthly_report(session: Session, user_id: str) -> MonthlyReport:
         return False
     
     report = MonthlyReport()
-    report.title = f"Flyswatter monthly report - {userDB.username} - {datetime.now():%Y-%m}"
+    report.title = f"FLYSWATTER MONTHLY REPORT - {userDB.username} - {datetime.now():%Y-%m}"
     report.username = userDB.username
 
     for projectDB in userDB.projects:

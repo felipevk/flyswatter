@@ -25,6 +25,7 @@ sentry-sdk = {extras = ["fastapi"], version = "^2.38.0"}
 prometheus-client = "^0.23.1"
 celery = "^5.5.3"
 redis = "^6.4.0"
+fpdf = "^1.7.2"
 
 
 [tool.poetry.group.dev.dependencies]

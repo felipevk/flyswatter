@@ -4,6 +4,8 @@ from .models import Comment, Issue, IssuePriority, IssueStatus, Project, User, J
 from uuid import uuid4
 import hashlib, json
 
+# ** passed as a parameter allows the caller to provide any extra number of keyword arguments not captured by any other parameters, 
+# which are then stored as a dictionary.
 def create_user(**overrides) -> User:
     defaults = {
         "name": "John Doe",

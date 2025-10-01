@@ -7,6 +7,8 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.api.routes_common import apiMessages
 from app.db.monthly_report import generate_monthly_report
+from app.artifacts.pdf_generator import monthly_report_pdf
+
 
 # bind is required for retries
 # TODO add autoretry_for and set it to the errors that can occur here
@@ -29,6 +31,7 @@ def generate_report(self, job_id: str, user_id: str, retry_backoff=True, max_ret
     session.commit()
     try:
         report = generate_monthly_report(session, user_id)
+        monthly_report_pdf(report, "output.pdf")
         jobDB.state = JobState.SUCCEEDED
     except:
         jobDB.state = JobState.FAILED
