@@ -95,7 +95,7 @@ def seed_db():
             nonAdminUsers[2],
             {
                 "title": "FilterBug",
-                "key": "1",
+                "key": "2",
                 "description": "Search results not updating after filter applied",
             },
         ),
@@ -105,7 +105,7 @@ def seed_db():
             nonAdminUsers[3],
             {
                 "title": "SafariUpload",
-                "key": "1",
+                "key": "3",
                 "description": "Profile picture upload fails on Safari",
                 "status": IssueStatus.IN_PROGRESS,
                 "priority": IssuePriority.LOW,
@@ -129,7 +129,7 @@ def seed_db():
             nonAdminUsers[4],
             {
                 "title": "ResetEmail",
-                "key": "1",
+                "key": "2",
                 "description": "Password reset email not sent",
                 "status": IssueStatus.CLOSED,
                 "priority": IssuePriority.LOW,
@@ -141,7 +141,7 @@ def seed_db():
             nonAdminUsers[2],
             {
                 "title": "DarkToggle",
-                "key": "1",
+                "key": "3",
                 "description": "Dark mode toggle doesn’t save preference",
             },
         ),
@@ -161,7 +161,7 @@ def seed_db():
             nonAdminUsers[3],
             {
                 "title": "ScrollStop",
-                "key": "1",
+                "key": "2",
                 "description": "Infinite scroll stops loading after page 3",
                 "status": IssueStatus.IN_PROGRESS,
                 "priority": IssuePriority.LOW,
@@ -173,7 +173,7 @@ def seed_db():
             nonAdminUsers[5],
             {
                 "title": "InvalidEmail",
-                "key": "1",
+                "key": "3",
                 "description": "Form validation allows invalid email",
             },
         ),
@@ -193,7 +193,7 @@ def seed_db():
             nonAdminUsers[4],
             {
                 "title": "FastCarousel",
-                "key": "1",
+                "key": "2",
                 "description": "Image carousel auto-plays too fast",
                 "status": IssueStatus.RESOLVED,
                 "priority": IssuePriority.HIGH,
@@ -205,7 +205,7 @@ def seed_db():
             nonAdminUsers[4],
             {
                 "title": "LatePush",
-                "key": "1",
+                "key": "3",
                 "description": "Push notifications delayed by several minutes",
                 "status": IssueStatus.IN_PROGRESS,
                 "priority": IssuePriority.URGENT,
@@ -217,7 +217,7 @@ def seed_db():
             nonAdminUsers[3],
             {
                 "title": "TextCutoff",
-                "key": "1",
+                "key": "4",
                 "description": "Text input cuts off characters in landscape mode",
             },
         ),
@@ -227,7 +227,7 @@ def seed_db():
             nonAdminUsers[3],
             {
                 "title": "CartCurrency",
-                "key": "1",
+                "key": "5",
                 "description": "Wrong currency displayed in cart",
             },
         ),
@@ -247,7 +247,7 @@ def seed_db():
             nonAdminUsers[1],
             {
                 "title": "StickyTooltip",
-                "key": "1",
+                "key": "2",
                 "description": "Tooltip remains visible after hover out",
                 "status": IssueStatus.IN_PROGRESS,
                 "priority": IssuePriority.URGENT,
@@ -259,7 +259,7 @@ def seed_db():
             nonAdminUsers[2],
             {
                 "title": "BrokenDownload",
-                "key": "1",
+                "key": "3",
                 "description": "File download link broken on Windows",
                 "status": IssueStatus.RESOLVED,
                 "priority": IssuePriority.URGENT,
@@ -271,7 +271,7 @@ def seed_db():
             nonAdminUsers[5],
             {
                 "title": "LostComment",
-                "key": "1",
+                "key": "4",
                 "description": "Comment form loses text when refreshing",
                 "status": IssueStatus.RESOLVED,
                 "priority": IssuePriority.URGENT,
@@ -283,7 +283,7 @@ def seed_db():
             nonAdminUsers[4],
             {
                 "title": "DateBlock",
-                "key": "1",
+                "key": "5",
                 "description": "Date picker doesn’t allow selecting today",
                 "status": IssueStatus.CLOSED,
                 "priority": IssuePriority.HIGH,
