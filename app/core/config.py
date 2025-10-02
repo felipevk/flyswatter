@@ -34,6 +34,13 @@ class RedisSettings(BaseModel):
     def build_url(self) -> str:
         return f"redis://{self.host}:{self.port}/{self.db}"
 
+class BlobSettings(BaseModel):
+    internal_endpoint: Optional[str] = os.getenv("MINIO_INTERNAL_ENDPOINT", "localhost:9000")
+    public_endpoint: Optional[str] = os.getenv("MINIO_PUBLIC_ENDPOINT", "localhost:9000")
+    user: Optional[str] = os.getenv("MINIO_ROOT_USER", "")
+    password: Optional[str] = os.getenv("MINIO_ROOT_PASSWORD", "")
+    bucket: Optional[str] = os.getenv("MINIO_DEFAULT_BUCKETS", "")
+
 class Settings(BaseModel):
     env: str = os.getenv("APP_ENV", "")
     
@@ -41,6 +48,7 @@ class Settings(BaseModel):
     database: DatabaseSettings = DatabaseSettings()
     sentry: SentrySettings = SentrySettings()
     redis: RedisSettings = RedisSettings()
+    blob: BlobSettings = BlobSettings()
 
 
 settings = Settings()

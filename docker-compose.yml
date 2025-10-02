@@ -36,5 +36,19 @@ services:
       - redis
     command: celery -A app.worker.celery_app.app worker --loglevel=info -Q pdfs
 
+  minio:
+    image: minio/minio
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.docker
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data
+
 volumes:
   pgdata:
+  minio_data:
+    driver: local

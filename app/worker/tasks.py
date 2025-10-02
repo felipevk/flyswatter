@@ -2,12 +2,14 @@ from .celery_app import app
 from time import sleep
 from app.db.models import Job, JobResultKind, JobState
 from app.db.session import SessionLocal
+from app.db.factory import create_artifact
 from datetime import datetime
 from sqlalchemy import select
 from fastapi import HTTPException, status
 from app.api.routes_common import apiMessages
 from app.db.monthly_report import generate_monthly_report
 from app.artifacts.pdf_generator import monthly_report_pdf
+from app.blob.storage import upload
 
 
 # bind is required for retries
@@ -32,7 +34,11 @@ def generate_report(self, job_id: str, user_id: str, retry_backoff=True, max_ret
     try:
         report = generate_monthly_report(session, user_id)
         monthly_report_pdf(report, "output.pdf")
+        report_url = upload("output.pdf", "reports")
         jobDB.state = JobState.SUCCEEDED
+        jobDB.result_kind = JobResultKind.ARTIFACT
+        newArtifact = create_artifact(jobDB, url=report_url)
+        session.add(newArtifact)
     except:
         jobDB.state = JobState.FAILED
         # TODO add error info
