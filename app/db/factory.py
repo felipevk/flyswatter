@@ -1,6 +1,6 @@
 from app.core.security import get_password_hash
 
-from .models import Comment, Issue, IssuePriority, IssueStatus, Project, User, Job, JobState, Artifact
+from .models import Artifact, Comment, Issue, IssuePriority, IssueStatus, Project, User, Job, JobState, Artifact
 from uuid import uuid4
 import hashlib, json
 
@@ -78,3 +78,12 @@ def create_job(user: User, **overrides) -> Job:
     defaults.update(overrides)
 
     return Job(**defaults)
+
+def create_artifact(job: Job, **overrides) -> Artifact:
+    defaults = {
+        "url": "",
+        "job": job
+    }
+    defaults.update(overrides)
+
+    return Artifact(**defaults)

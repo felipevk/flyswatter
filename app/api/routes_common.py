@@ -36,6 +36,7 @@ class Messages(BaseModel):
     user_not_author: str = "Only the author can perform this operation"
     requires_idempotency_key: str = "Idempotency-Key header required"
     job_not_found: str = "Job not found"
+    artifact_not_found: str = "Artifact not found"
 
 
 apiMessages = Messages()

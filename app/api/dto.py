@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.db.models import IssuePriority, IssueStatus, Job, JobResultKind, JobState
+from app.db.models import Artifact, IssuePriority, IssueStatus, Job, JobResultKind, JobState
 
 from typing import Any, Mapping
 
@@ -22,7 +22,7 @@ class JobRead(JobBasic):
     error_payload: Mapping[str, Any]|None | None = None
 
     result_kind: JobResultKind | None = None
-    artifact_id: int | None = None
+    artifact_id: str | None = None
 
 def jobReadFrom(jobDB : Job)->JobRead:
     return JobRead(
@@ -41,7 +41,7 @@ def jobReadFrom(jobDB : Job)->JobRead:
         error_payload = jobDB.error_payload,
 
         result_kind = jobDB.result_kind,
-        artifact_id = jobDB.artifact_id,
+        artifact_id = jobDB.artifact.public_id if jobDB.artifact is not None else None
     )
     
 
@@ -127,3 +127,20 @@ class CommentEditOut(CommentEditIn):
 
 class CommentRead(CommentEditOut):
     pass
+
+class ArtifactRead(BaseModel):
+    id: str
+    url: str
+    job_id: str
+    created_at: str
+    expires_at: str | None = None
+
+def artifactReadFrom(artifactDB : Artifact)->ArtifactRead:
+    return ArtifactRead(
+        id=artifactDB.public_id,
+        url=artifactDB.url,
+        job_id = artifactDB.job.public_id,
+        
+        created_at=artifactDB.created_at.strftime("%a %d %b %Y, %I:%M%p"),
+        expires_at=artifactDB.expires_at.strftime("%a %d %b %Y, %I:%M%p") if artifactDB.expires_at is not None else None
+    )
