@@ -10,6 +10,7 @@ from app.api.routes_common import apiMessages
 from app.db.monthly_report import generate_monthly_report
 from app.artifacts.pdf_generator import monthly_report_pdf
 from app.blob.storage import upload
+from app.core.errors import AppError
 
 
 # bind is required for retries
@@ -39,9 +40,10 @@ def generate_report(self, job_id: str, user_id: str, retry_backoff=True, max_ret
         jobDB.result_kind = JobResultKind.ARTIFACT
         newArtifact = create_artifact(jobDB, url=report_url)
         session.add(newArtifact)
-    except:
+    except AppError as e:
         jobDB.state = JobState.FAILED
-        # TODO add error info
+        jobDB.last_error = str(e)
+        jobDB.error_kind = type(e).__name__
         jobDB.finished_at = datetime.now()
         session.commit()
         raise

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy import select
 
 from app.db.models import Job, JobResultKind, JobState
@@ -36,6 +36,39 @@ async def read_failed_jobs(
 
     return allJobs
 
+@router.get("/jobs/{job_id}/result")
+async def read_job_result(
+    job_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_session)],
+    response: Response
+):
+    jobQuery = select(Job).where(Job.public_id == job_id)
+    jobDB = session.execute(jobQuery).scalars().first()
+    if not jobDB:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=apiMessages.job_not_found,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    match jobDB.state:
+        case JobState.FAILED:
+            response.status_code = status.HTTP_409_CONFLICT
+            return {
+                "message": f"{jobDB.error_kind}: {jobDB.last_error}"
+            }
+        case JobState.QUEUED | JobState.RUNNING:
+            response.status_code = status.HTTP_202_ACCEPTED
+            return {"message": apiMessages.job_accepted}
+        case JobState.SUCCEEDED:
+            if jobDB.result_kind == JobResultKind.ARTIFACT and jobDB.artifact is not None:
+                return {
+                    "artifact_url": jobDB.artifact.url
+                }
+    
+    
+
 @router.get("/jobs/{job_id}", response_model=JobRead)
 async def read_job(
     job_id: str,
@@ -51,3 +84,4 @@ async def read_job(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return jobReadFrom(jobDB)
+   

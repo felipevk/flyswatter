@@ -37,6 +37,7 @@ class Messages(BaseModel):
     requires_idempotency_key: str = "Idempotency-Key header required"
     job_not_found: str = "Job not found"
     artifact_not_found: str = "Artifact not found"
+    job_accepted: str = "Job accepted"
 
 
 apiMessages = Messages()
