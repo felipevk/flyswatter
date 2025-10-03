@@ -6,3 +6,9 @@ class UnknownError(AppError):
 
 class BlobError(AppError):
     pass
+
+class ConnectionError(AppError):
+    pass
+
+class ExternalServiceError(AppError):
+    pass

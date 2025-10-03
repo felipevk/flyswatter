@@ -55,17 +55,13 @@ async def read_job_result(
     match jobDB.state:
         case JobState.FAILED:
             response.status_code = status.HTTP_409_CONFLICT
-            return {
-                "message": f"{jobDB.error_kind}: {jobDB.last_error}"
-            }
+            return {"message": f"{jobDB.error_kind}: {jobDB.last_error}"}
         case JobState.QUEUED | JobState.RUNNING:
             response.status_code = status.HTTP_202_ACCEPTED
             return {"message": apiMessages.job_accepted}
         case JobState.SUCCEEDED:
             if jobDB.result_kind == JobResultKind.ARTIFACT and jobDB.artifact is not None:
-                return {
-                    "artifact_url": jobDB.artifact.url
-                }
+                return {"artifact_url": jobDB.artifact.url}
     
     
 
