@@ -11,7 +11,7 @@ from app.api.routes_common import apiMessages
 from app.db.monthly_report import generate_monthly_report
 from app.artifacts.pdf_generator import monthly_report_pdf
 from app.blob.storage import upload
-from app.core.errors import AppError, ConnectionError, ExternalServiceError
+from app.core.errors import AppError, BlobError, ConnectionError, ExternalServiceError
 
 def fetch_task(session: Session, job_id:str)-> Job:
     jobQuery = select(Job).where(Job.public_id == job_id)
@@ -35,7 +35,6 @@ def error_task(session: Session, job: Job, e: AppError):
     job.state = JobState.FAILED
     job.last_error = str(e)
     job.error_kind = type(e).__name__
-    job.finished_at = datetime.now()
     session.commit()
 
 def succeed_task_artifact(session: Session, job: Job, artifactUrl: str):
@@ -52,9 +51,8 @@ def finish_task(session: Session, job: Job):
 # bind is required for retries
 # TODO add autoretry_for and set it to the errors that can occur here
 # retry_backoff will exponentially delay between retries
-@app.task(bind=True)
-def generate_report(self, job_id: str, user_id: str, retry_backoff=True, max_retries=5,
-    autoretry_for=(ConnectionError, ExternalServiceError)):
+@app.task(bind=True, retry_backoff=True, max_retries=5, autoretry_for=(BlobError, ConnectionError, ExternalServiceError))
+def generate_report(self, job_id: str, user_id: str):
     session = SessionLocal()
 
     jobDB = fetch_task(session, job_id)
@@ -66,8 +64,12 @@ def generate_report(self, job_id: str, user_id: str, retry_backoff=True, max_ret
         report_url = upload("output.pdf", "reports")
         
         succeed_task_artifact(session, jobDB, report_url)
+    
+    except (ConnectionError,ExternalServiceError ) as e:
+        error_task(session, jobDB, e)
+        raise e
+    
     except AppError as e:
         error_task(session, jobDB, e)
-        raise
-
-    finish_task(session, jobDB)
+        finish_task(session, jobDB)
+        raise e
