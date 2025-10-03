@@ -6,6 +6,7 @@ from prometheus_client import make_asgi_app
 
 from app.core.config import settings
 from app.core.metrics import inc_request_count
+from app.core.monitoring import sentry_init
 
 from .api.routes_artifact import router as artifact_router
 from .api.routes_comment import router as comment_router
@@ -26,6 +27,8 @@ app.include_router(comment_router)
 app.include_router(sentry_router)
 app.include_router(job_router)
 app.mount("/metrics", make_asgi_app())
+
+sentry_init()
 
 
 @app.get("/")

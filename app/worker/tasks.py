@@ -12,6 +12,9 @@ from app.db.monthly_report import generate_monthly_report
 from app.artifacts.pdf_generator import monthly_report_pdf
 from app.blob.storage import upload
 from app.core.errors import AppError, BlobError, ConnectionError, ExternalServiceError
+from app.core.monitoring import sentry_init
+
+sentry_init()
 
 def fetch_task(session: Session, job_id:str)-> Job:
     jobQuery = select(Job).where(Job.public_id == job_id)
