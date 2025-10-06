@@ -15,6 +15,7 @@ class SentrySettings(BaseModel):
     sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN", None)
     sample_rate: Optional[str] = os.getenv("SENTRY_SAMPLE_RATE", 1.0)
 
+
 class DatabaseSettings(BaseModel):
     user: str = os.getenv("POSTGRES_USER", "")
     pwd: str = os.getenv("POSTGRES_PASSWORD", "")
@@ -24,7 +25,10 @@ class DatabaseSettings(BaseModel):
     driver: str = os.getenv("DB_DRIVER", "")
 
     def build_url(self) -> str:
-        return f"{self.driver}://{self.user}:{self.pwd}@{self.host}:{self.port}/{self.db}"
+        return (
+            f"{self.driver}://{self.user}:{self.pwd}@{self.host}:{self.port}/{self.db}"
+        )
+
 
 class RedisSettings(BaseModel):
     host: Optional[str] = os.getenv("REDIS_HOST", "localhost")
@@ -34,16 +38,22 @@ class RedisSettings(BaseModel):
     def build_url(self) -> str:
         return f"redis://{self.host}:{self.port}/{self.db}"
 
+
 class BlobSettings(BaseModel):
-    internal_endpoint: Optional[str] = os.getenv("MINIO_INTERNAL_ENDPOINT", "localhost:9000")
-    public_endpoint: Optional[str] = os.getenv("MINIO_PUBLIC_ENDPOINT", "localhost:9000")
+    internal_endpoint: Optional[str] = os.getenv(
+        "MINIO_INTERNAL_ENDPOINT", "localhost:9000"
+    )
+    public_endpoint: Optional[str] = os.getenv(
+        "MINIO_PUBLIC_ENDPOINT", "localhost:9000"
+    )
     user: Optional[str] = os.getenv("MINIO_ROOT_USER", "")
     password: Optional[str] = os.getenv("MINIO_ROOT_PASSWORD", "")
     bucket: Optional[str] = os.getenv("MINIO_DEFAULT_BUCKETS", "")
 
+
 class Settings(BaseModel):
     env: str = os.getenv("APP_ENV", "")
-    
+
     auth: AuthSettings = AuthSettings()
     database: DatabaseSettings = DatabaseSettings()
     sentry: SentrySettings = SentrySettings()

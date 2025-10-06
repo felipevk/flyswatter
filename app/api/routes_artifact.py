@@ -10,6 +10,7 @@ from .routes_common import *
 
 router = APIRouter(tags=["artifact"])
 
+
 @router.get("/artifacts/all", response_model=list[ArtifactRead])
 async def read_all_artifacts(
     current_user: Annotated[User, Depends(get_current_active_user)],

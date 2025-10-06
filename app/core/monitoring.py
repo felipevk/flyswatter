@@ -1,5 +1,7 @@
 import sentry_sdk
+
 from app.core.config import settings
+
 
 def sentry_init():
     if settings.sentry.sentry_dsn:

@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import List, Any, Mapping
+from typing import Any, List, Mapping
 from uuid import uuid4
 
 from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint
@@ -37,6 +37,7 @@ class JobState(enum.StrEnum):
     RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
 
 class JobResultKind(enum.StrEnum):
     ARTIFACT = "artifact"
@@ -222,21 +223,24 @@ class Job(Base):
 
     job_type: Mapped[str] = mapped_column(nullable=False)
     state: Mapped[JobState] = mapped_column(
-        Enum(JobState, name="job_state_enum"),
-        nullable=False
+        Enum(JobState, name="job_state_enum"), nullable=False
     )
     attempts: Mapped[int] = mapped_column(nullable=False, default=0)
 
-    started_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
-    finished_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now, onupdate=datetime.now
+    )
 
     # last error message
-    last_error: Mapped[str|None] = mapped_column(nullable=True)
-    error_kind: Mapped[str|None] = mapped_column(nullable=True)
+    last_error: Mapped[str | None] = mapped_column(nullable=True)
+    error_kind: Mapped[str | None] = mapped_column(nullable=True)
     # JSONB is not a python type, so it can't be used in the type hint
     # We need it to be MutableDict because SQLAlchemy doesn't detect field changes by default, only reassignment
-    error_payload: Mapped[Mapping[str, Any]|None] = mapped_column(MutableDict.as_mutable(JSONB), nullable=True)
+    error_payload: Mapped[Mapping[str, Any] | None] = mapped_column(
+        MutableDict.as_mutable(JSONB), nullable=True
+    )
 
     idempotency_key: Mapped[str] = mapped_column(
         String(32), unique=True, nullable=False, index=True
@@ -246,14 +250,19 @@ class Job(Base):
     # Since there's a chance new enum types will be introduced, do to map it to enum on db
     # instead store as VARCHAR, reject unknown values
     # in the db the validation is done by a CHECK constraint which in this case is named ck_result_kind
-    result_kind: Mapped[JobResultKind|None] = mapped_column(
-        Enum(JobResultKind, native_enum=False,
-           validate_strings=True,          
-           name="ck_result_kind"),    
-        nullable=True
+    result_kind: Mapped[JobResultKind | None] = mapped_column(
+        Enum(
+            JobResultKind,
+            native_enum=False,
+            validate_strings=True,
+            name="ck_result_kind",
+        ),
+        nullable=True,
     )
 
-    artifact_id: Mapped[int|None] = mapped_column(ForeignKey("artifacts.id"), nullable=True)
+    artifact_id: Mapped[int | None] = mapped_column(
+        ForeignKey("artifacts.id"), nullable=True
+    )
     # Mapped["Artifact"|None] wouldn't work because it can't figure out it's an optional class
     # Had to change to direct class reference and define Artifact before so it can find it
-    artifact: Mapped[Artifact|None] = relationship(back_populates="job")
+    artifact: Mapped[Artifact | None] = relationship(back_populates="job")

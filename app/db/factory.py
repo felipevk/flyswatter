@@ -1,10 +1,23 @@
+import hashlib
+import json
+from uuid import uuid4
+
 from app.core.security import get_password_hash
 
-from .models import Artifact, Comment, Issue, IssuePriority, IssueStatus, Project, User, Job, JobState, Artifact
-from uuid import uuid4
-import hashlib, json
+from .models import (
+    Artifact,
+    Comment,
+    Issue,
+    IssuePriority,
+    IssueStatus,
+    Job,
+    JobState,
+    Project,
+    User,
+)
 
-# ** passed as a parameter allows the caller to provide any extra number of keyword arguments not captured by any other parameters, 
+
+# ** passed as a parameter allows the caller to provide any extra number of keyword arguments not captured by any other parameters,
 # which are then stored as a dictionary.
 def create_user(**overrides) -> User:
     defaults = {
@@ -55,6 +68,7 @@ def create_comment(issue: Issue, author: User, **overrides) -> Comment:
 
     return Comment(**defaults)
 
+
 def create_request_hash(body: dict | None, query: dict | None) -> str:
     if body:
         payload = body
@@ -67,23 +81,22 @@ def create_request_hash(body: dict | None, query: dict | None) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()
 
+
 def create_job(user: User, **overrides) -> Job:
     defaults = {
         "user": user,
         "job_type": "generate-report",
         "state": JobState.QUEUED,
         "idempotency_key": uuid4().hex,
-        "request_hash": create_request_hash(None, None)
+        "request_hash": create_request_hash(None, None),
     }
     defaults.update(overrides)
 
     return Job(**defaults)
 
+
 def create_artifact(job: Job, **overrides) -> Artifact:
-    defaults = {
-        "url": "",
-        "job": job
-    }
+    defaults = {"url": "", "job": job}
     defaults.update(overrides)
 
     return Artifact(**defaults)

@@ -1,21 +1,22 @@
-from pydantic import BaseModel
-from .models import User, Issue, Project, IssuePriority, IssueStatus
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-
-from datetime import datetime, timezone
-
 from collections import defaultdict
-
+from datetime import datetime, timezone
 from typing import List
 
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from .models import Issue, IssuePriority, IssueStatus, Project, User
+
+
 class IssueReport(BaseModel):
-    key: str = "" # PROJ-1
+    key: str = ""  # PROJ-1
     title: str = ""
     description: str = ""
-    creator: str = "" #username
+    creator: str = ""  # username
     priority: IssuePriority = IssuePriority.MEDIUM
     status: IssueStatus = IssueStatus.OPEN
+
 
 class UserIssueReport(BaseModel):
     username: str = ""
@@ -35,7 +36,10 @@ class MonthlyReport(BaseModel):
     username: str = ""
     projects: List[ProjectReport] = []
 
-def generate_issue_report(session: Session, proj_key: str, issueDB: Issue) -> IssueReport:
+
+def generate_issue_report(
+    session: Session, proj_key: str, issueDB: Issue
+) -> IssueReport:
     report = IssueReport()
     report.key = f"{proj_key}-{issueDB.key}"
     report.title = issueDB.title
@@ -46,7 +50,10 @@ def generate_issue_report(session: Session, proj_key: str, issueDB: Issue) -> Is
 
     return report
 
-def generate_user_issue_report(session: Session, username: str, proj_key: str, issuesDB: list[Issue]) -> UserIssueReport:
+
+def generate_user_issue_report(
+    session: Session, username: str, proj_key: str, issuesDB: list[Issue]
+) -> UserIssueReport:
     report = UserIssueReport()
     report.username = username
 
@@ -54,6 +61,7 @@ def generate_user_issue_report(session: Session, username: str, proj_key: str, i
         report.open_issues.append(generate_issue_report(session, proj_key, issueDB))
 
     return report
+
 
 def generate_project_report(session: Session, projectDB: Project) -> ProjectReport:
     report = ProjectReport()
@@ -66,20 +74,26 @@ def generate_project_report(session: Session, projectDB: Project) -> ProjectRepo
 
     for issueDB in projectDB.issues:
         if issueDB.created_at.year == year and issueDB.created_at.month == month:
-                report.created_issues_month += 1
+            report.created_issues_month += 1
 
         match issueDB.status:
             case IssueStatus.OPEN:
                 report.open_issues += 1
                 issuesByUser[issueDB.assigned.username].append(issueDB)
             case IssueStatus.CLOSED:
-                if issueDB.updated_at.year == year and issueDB.updated_at.month == month:
+                if (
+                    issueDB.updated_at.year == year
+                    and issueDB.updated_at.month == month
+                ):
                     report.closed_issues_month += 1
 
     for username, issues in issuesByUser.items():
-        report.user_issues.append(generate_user_issue_report(session, username, projectDB.key, issues))
+        report.user_issues.append(
+            generate_user_issue_report(session, username, projectDB.key, issues)
+        )
 
     return report
+
 
 def generate_monthly_report(session: Session, user_id: str) -> MonthlyReport:
     userQuery = select(User).where(User.public_id == user_id)
@@ -87,15 +101,18 @@ def generate_monthly_report(session: Session, user_id: str) -> MonthlyReport:
     if not userDB:
         # TODO return proper error
         return False
-    
+
     report = MonthlyReport()
-    report.title = f"FLYSWATTER MONTHLY REPORT - {userDB.username} - {datetime.now():%Y-%m}"
+    report.title = (
+        f"FLYSWATTER MONTHLY REPORT - {userDB.username} - {datetime.now():%Y-%m}"
+    )
     report.username = userDB.username
 
     for projectDB in userDB.projects:
         report.projects.append(generate_project_report(session, projectDB))
 
     return report
+
 
 def print_monthly_report(report: MonthlyReport):
     print(report.title)

@@ -12,10 +12,10 @@ from .api.routes_artifact import router as artifact_router
 from .api.routes_comment import router as comment_router
 from .api.routes_health import router as health_router
 from .api.routes_issue import router as issue_router
+from .api.routes_job import router as job_router
 from .api.routes_project import router as project_router
 from .api.routes_sentry import router as sentry_router
 from .api.routes_user import router as user_router
-from .api.routes_job import router as job_router
 
 app = FastAPI(title="Flyswatter API")
 app.include_router(artifact_router)

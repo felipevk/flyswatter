@@ -117,9 +117,10 @@ async def require_admin(
         )
     return current_user
 
+
 async def require_idempotency_key(
-    idem_key: str = Header(alias="Idempotency-Key")
-)->str:
+    idem_key: str = Header(alias="Idempotency-Key"),
+) -> str:
     if not idem_key:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=apiMessages.requires_admin

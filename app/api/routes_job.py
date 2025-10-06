@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 
 from app.db.models import Job, JobResultKind, JobState
@@ -9,6 +9,7 @@ from .dto import JobRead, jobReadFrom
 from .routes_common import *
 
 router = APIRouter(tags=["job"])
+
 
 @router.get("/jobs/all", response_model=list[JobRead])
 async def read_all_jobs(
@@ -23,6 +24,7 @@ async def read_all_jobs(
 
     return allJobs
 
+
 @router.get("/jobs/failed", response_model=list[JobRead])
 async def read_failed_jobs(
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -36,12 +38,13 @@ async def read_failed_jobs(
 
     return allJobs
 
+
 @router.get("/jobs/{job_id}/result")
 async def read_job_result(
     job_id: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
-    response: Response
+    response: Response,
 ):
     jobQuery = select(Job).where(Job.public_id == job_id)
     jobDB = session.execute(jobQuery).scalars().first()
@@ -60,10 +63,12 @@ async def read_job_result(
             response.status_code = status.HTTP_202_ACCEPTED
             return {"message": apiMessages.job_accepted}
         case JobState.SUCCEEDED:
-            if jobDB.result_kind == JobResultKind.ARTIFACT and jobDB.artifact is not None:
+            if (
+                jobDB.result_kind == JobResultKind.ARTIFACT
+                and jobDB.artifact is not None
+            ):
                 return {"artifact_url": jobDB.artifact.url}
-    
-    
+
 
 @router.get("/jobs/{job_id}", response_model=JobRead)
 async def read_job(
@@ -80,4 +85,3 @@ async def read_job(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return jobReadFrom(jobDB)
-   
