@@ -1,7 +1,6 @@
 from .celery_app import app
-from time import sleep
 from app.db.models import Job, JobResultKind, JobState
-from app.db.session import SessionLocal
+from app.db.session import create_session
 from app.db.factory import create_artifact
 from datetime import datetime
 from sqlalchemy import select
@@ -56,8 +55,7 @@ def finish_task(session: Session, job: Job):
 # retry_backoff will exponentially delay between retries
 @app.task(bind=True, retry_backoff=True, max_retries=5, autoretry_for=(BlobError, ConnectionError, ExternalServiceError))
 def generate_report(self, job_id: str, user_id: str):
-    session = SessionLocal()
-
+    session = create_session()
     jobDB = fetch_task(session, job_id)
     start_task(session, jobDB)
 
@@ -68,7 +66,7 @@ def generate_report(self, job_id: str, user_id: str):
         
         succeed_task_artifact(session, jobDB, report_url)
     
-    except (ConnectionError,ExternalServiceError ) as e:
+    except (ConnectionError, ExternalServiceError ) as e:
         error_task(session, jobDB, e)
         raise e
     

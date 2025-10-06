@@ -9,26 +9,30 @@ import os
 
 from app.core.errors import BlobError
 
-client_internal = Minio(
-    settings.blob.internal_endpoint,
-    access_key=settings.blob.user,
-    secret_key=settings.blob.password,
-    secure=False
-)
-
-client_public = Minio(
-    settings.blob.public_endpoint,
-    access_key=settings.blob.user,
-    secret_key=settings.blob.password,
-    secure=False
-)
-
 def create_bucket():
+    client_internal = Minio(
+        settings.blob.internal_endpoint,
+        access_key=settings.blob.user,
+        secret_key=settings.blob.password,
+        secure=False
+    )
     found = client_internal.bucket_exists(settings.blob.bucket)
     if not found:
         client_internal.make_bucket(settings.blob.bucket)
     
 def upload(file_path: str, dest_folder_name: str) -> str:
+    client_internal = Minio(
+        settings.blob.internal_endpoint,
+        access_key=settings.blob.user,
+        secret_key=settings.blob.password,
+        secure=False
+    )
+    client_public = Minio(
+        settings.blob.public_endpoint,
+        access_key=settings.blob.user,
+        secret_key=settings.blob.password,
+        secure=False
+    )
     _, file_extension = os.path.splitext(file_path)
     fileId = uuid4().hex
     dest_path = f"{dest_folder_name}/{fileId}{file_extension}"

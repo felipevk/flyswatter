@@ -9,8 +9,12 @@ from sqlalchemy_utils import create_database, database_exists
 
 from app.api.routes_common import get_session
 from app.core.config import settings
+from app.core.errors import BlobError
 from app.db.base import Base  # your declarative Base
 from app.main import app
+from app.worker.celery_app import app as celery_app
+
+from unittest.mock import patch
 
 TEST_DB_URL = settings.database.build_url()
 
@@ -92,7 +96,7 @@ def db_session(connection):
 
 
 @pytest.fixture(autouse=True)
-def override_fastapi_session(db_session):
+def override_db_session(db_session):
     def _override():
         return db_session
 
@@ -101,3 +105,29 @@ def override_fastapi_session(db_session):
         yield
     finally:
         app.dependency_overrides.pop(get_session, None)
+    
+
+@pytest.fixture
+def mockMinIO():
+    with patch("app.blob.storage.Minio") as mockMinio:
+        mockMinio.return_value.presigned_get_object.return_value = "Mock.pdf"
+        yield mockMinIO
+
+@pytest.fixture
+def mockMinIOFailure():
+    with patch("app.blob.storage.Minio") as mockMinio:
+        mockMinio.return_value.presigned_get_object.side_effect = BlobError
+        yield mockMinIO
+
+    
+@pytest.fixture(scope="session", autouse=True)
+def celery_conf():
+    celery_app.conf.update(
+        task_always_eager=True,           # run inline
+        task_eager_propagates=True,       # raise exceptions to pytest
+        task_ignore_result=True,          # don't touch result backend
+        task_store_eager_result=False,    # belt & suspenders
+        broker_url="memory://",           # no Redis/Rabbit sockets/threads
+        broker_connection_retry_on_startup=False,
+    )
+    yield

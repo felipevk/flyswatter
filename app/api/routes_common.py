@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import Token, get_token_payload, verify_password
 from app.db.models import User
-from app.db.session import SessionLocal, engine
+from app.db.session import create_session, engine
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -47,7 +47,7 @@ apiMessages = Messages()
 # and it will call it again once the endpoint returns
 # Additionally, any other functions that has this as a dependency will share the same cached session
 def get_session() -> Session:
-    session = SessionLocal()
+    session = create_session()
     try:
         yield session
     finally:

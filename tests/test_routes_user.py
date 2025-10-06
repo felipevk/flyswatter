@@ -5,15 +5,18 @@ from fastapi.testclient import TestClient
 from freezegun import freeze_time
 from sqlalchemy import insert, select
 
-from app.api.dto import UserCreate, UserEdit, UserRead
+from app.api.dto import UserCreate, UserEdit, UserRead, UserReport
 from app.api.routes_common import Token, apiMessages
 from app.core.config import settings
 from app.core.security import get_token_payload
-from app.db.models import RefreshToken, User
+from app.db.models import RefreshToken, User, Job, JobState, JobResultKind
 from app.main import app
+from app.db.factory import create_user, create_project, create_issue, create_job
 
 from .conftest import db_session
 from .test_routes_common import *
+
+from uuid import uuid4
 
 
 def test_createuser_success():
@@ -557,3 +560,43 @@ def test_deleteuser_usernotfound(db_session):
 
     assert r.status_code == status.HTTP_409_CONFLICT
     assert r.json()["detail"] == apiMessages.user_not_found
+
+def test_reportendpoint_success(db_session, mockMinIO, monkeypatch):
+    monkeypatch.setattr("app.worker.tasks.create_session", lambda: db_session, raising=True)
+    c = TestClient(app)
+    login = "jdoetestuser"
+    password = "AAAAAAA"
+    userDB = create_user(username=login, password=password)
+    db_session.add(userDB)
+    projectDB = create_project(userDB)
+    db_session.add(projectDB)
+    db_session.add(create_issue(projectDB, userDB, userDB))
+    db_session.commit()
+    token = get_test_token(c, login, password)
+    toExpect = UserReport(
+        id="",
+        user_id=userDB.public_id,
+        job_type="generate-report",
+        status=JobState.SUCCEEDED
+    )
+
+    # endpoint that creates job
+    reportR = c.post(
+        f"/user/report",
+        headers={
+            "Authorization": f"Bearer {token.access_token}",
+            "Idempotency-Key": uuid4().hex
+            },
+    )
+    reportData = UserReport(**reportR.json())
+
+    #endpoint that checks job result
+    resultR = c.get(
+        f"/jobs/{reportData.id}/result",
+        headers={
+            "Authorization": f"Bearer {token.access_token}"
+            },
+    )
+
+    assert reportR.status_code == 200
+    assert resultR.json()["artifact_url"] is not None
