@@ -29,7 +29,9 @@ services:
       - "6379:6379"
   
   worker:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile_worker
     env_file: .env.docker
     depends_on:
       - db
