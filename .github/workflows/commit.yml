@@ -70,5 +70,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Poetry
+      run: pip install --no-cache-dir poetry
+
+    - name: Install dependencies
+      run: poetry config virtualenvs.create false | poetry install --no-interaction --no-ansi
+
     - name: Python Linter
       run: make lint-check
