@@ -21,4 +21,4 @@ RUN poetry config virtualenvs.create false \
 COPY app ./app
 
 # 7. Define the default startup command
-CMD ["celery", "-A", "app.worker.celery_app.app", "worker", "--loglevel=info", "-Q", "pdfs"]
+CMD ["celery", "-A", "app.worker.celery_app.app", "worker", "-c", "1", "--loglevel=info", "-Q", "pdfs"]

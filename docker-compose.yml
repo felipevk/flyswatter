@@ -36,7 +36,6 @@ services:
     depends_on:
       - db
       - redis
-    command: celery -A app.worker.celery_app.app worker --loglevel=info -Q pdfs
 
   minio:
     image: minio/minio
