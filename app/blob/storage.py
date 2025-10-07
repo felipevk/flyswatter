@@ -42,7 +42,7 @@ def upload(file_path: str, dest_folder_name: str) -> str:
         # pre-signed urls use the public client so they can be accessed from the public endpoint
         return client_public.presigned_get_object(settings.blob.bucket, dest_path)
     except S3Error as err:
-        raise BlobError("S3 operation failed") from err
+        raise BlobError(f"S3 operation failed: {str(err)}") from err
 
 
 if __name__ == "__main__":
