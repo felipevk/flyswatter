@@ -40,7 +40,8 @@ async def create_comment(
     )
 
 
-@router.get("/comment/mine", response_model=list[CommentRead])
+# TODO
+"""@router.get("/comment/mine", response_model=list[CommentRead])
 async def read_user_comments(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
@@ -54,7 +55,7 @@ async def read_issue_comments(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[CommentRead]:
-    pass
+    pass"""
 
 
 @router.post("/comment/edit/{comment_id}", response_model=CommentEditOut)

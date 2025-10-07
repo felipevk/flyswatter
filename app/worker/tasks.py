@@ -75,6 +75,8 @@ def generate_report(self, job_id: str, user_id: str):
 
     try:
         report = generate_monthly_report(session, user_id)
+        if report is None:
+            raise AppError(f"Monthly report not found for user {user_id}")
         monthly_report_pdf(report, "output.pdf")
         report_url = upload("output.pdf", "reports")
 

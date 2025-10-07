@@ -50,6 +50,7 @@ lint:
 	poetry run isort . --profile black
 
 lint-check:
+	poetry run mypy . --show-error-codes --show-error-context --pretty
 	poetry run black --check .
 	poetry run isort . -c --profile black
 

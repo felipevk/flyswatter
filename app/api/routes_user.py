@@ -175,7 +175,7 @@ async def edit_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     userDB.email = editReq.email
-    userDB.name = editReq.full_name
+    userDB.name = editReq.full_name if editReq.full_name is not None else ""
     userDB.pass_hash = get_password_hash(editReq.password)
     userDB.disabled = editReq.disabled
     userDB.admin = editReq.admin
@@ -196,7 +196,7 @@ async def edit_user(
 async def read_all_users(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
-) -> UserRead:
+) -> list[UserRead]:
 
     userQuery = select(User)
     userDB = session.execute(userQuery).scalars()

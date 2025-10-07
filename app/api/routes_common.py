@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
@@ -46,7 +47,7 @@ apiMessages = Messages()
 # Will return session at first time it's driven by fastapi
 # and it will call it again once the endpoint returns
 # Additionally, any other functions that has this as a dependency will share the same cached session
-def get_session() -> Session:
+def get_session() -> Generator[Session]:
     session = create_session()
     try:
         yield session
@@ -54,28 +55,28 @@ def get_session() -> Session:
         session.close()
 
 
-def get_user(username: str, session: Session) -> User:
+def get_user(username: str, session: Session) -> User | None:
     userQuery = select(User).where(User.username == username)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
-        return False
+        return None
     return userDB
 
 
-def get_user_from_id(id: str, session: Session) -> User:
+def get_user_from_id(id: str, session: Session) -> User | None:
     userQuery = select(User).where(User.public_id == id)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
-        return False
+        return None
     return userDB
 
 
-def authenticate_user(username: str, password: str, session: Session):
+def authenticate_user(username: str, password: str, session: Session) -> User | None:
     userDB = get_user(username, session)
     if not userDB:
-        return False
+        return None
     if not verify_password(password, userDB.pass_hash):
-        return False
+        return None
     return userDB
 
 

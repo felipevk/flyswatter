@@ -1,9 +1,10 @@
+import typing
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import Integer, func, insert, select, update
+from sqlalchemy import Integer, func, select
 
-from app.db.models import Issue, IssuePriority, IssueStatus, Project, User
+from app.db.models import Issue, IssueStatus, Project, User
 
 from .dto import IssueCreate, IssueEditIn, IssueEditOut, IssueRead
 from .routes_common import *
@@ -20,6 +21,12 @@ async def create_issue(
     author = current_user.username
     projectQuery = select(Project).where(Project.public_id == createReq.project_id)
     projectDB = session.execute(projectQuery).scalars().first()
+    if not projectDB:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Project {createReq.project_id} not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     assignedQuery = select(User).where(User.public_id == createReq.assignee_id)
     assignedUserDB = session.execute(assignedQuery).scalars().first()
@@ -32,8 +39,12 @@ async def create_issue(
     highestKeyQuery = select(func.max(Issue.key.cast(Integer))).where(
         Issue.project_id == projectDB.id
     )
-    highestKey = session.execute(highestKeyQuery).first()[0]
-    newKey = highestKey + 1 if highestKey is not None else 1
+    highestKeyRow = session.execute(highestKeyQuery).first()
+
+    newKey = 1
+    # Added extra check to satisfy mypy index check
+    if highestKeyRow and highestKeyRow[0] is not None:
+        newKey = highestKeyRow[0] + 1
     newIssue = Issue(
         key=newKey,
         title=createReq.title,
@@ -62,12 +73,13 @@ async def create_issue(
     )
 
 
-@router.get("/issue/mine", response_model=list[IssueRead])
+# TODO
+"""@router.get("/issue/mine", response_model=list[IssueRead])
 async def read_user_issues(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> list[IssueRead]:
-    pass
+    pass"""
 
 
 @router.post("/issue/edit/{issue_id}", response_model=IssueEditOut)
@@ -134,13 +146,14 @@ async def edit_issue(
     )
 
 
-@router.post("/issue/resolve/{issue_id}", response_model=IssueRead)
+# TODO
+"""@router.post("/issue/resolve/{issue_id}", response_model=IssueRead)
 async def resolve_issue(
     issue_id: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[Session, Depends(get_session)],
 ) -> IssueRead:
-    pass
+    pass"""
 
 
 @router.post("/issue/delete/{issue_id}")

@@ -95,7 +95,7 @@ async def read_user_projects(
 
 
 @router.post("/project/delete/{project_id}")
-async def read_project(
+async def delete_project(
     project_id: str,
     admin_user: Annotated[User, Depends(require_admin)],
     session: Annotated[Session, Depends(get_session)],

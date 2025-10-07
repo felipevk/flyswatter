@@ -95,12 +95,12 @@ def generate_project_report(session: Session, projectDB: Project) -> ProjectRepo
     return report
 
 
-def generate_monthly_report(session: Session, user_id: str) -> MonthlyReport:
+def generate_monthly_report(session: Session, user_id: str) -> MonthlyReport | None:
     userQuery = select(User).where(User.public_id == user_id)
     userDB = session.execute(userQuery).scalars().first()
     if not userDB:
         # TODO return proper error
-        return False
+        return None
 
     report = MonthlyReport()
     report.title = (
