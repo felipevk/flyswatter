@@ -4,6 +4,12 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+def getBoolEnv(varName: str) -> bool:
+    envVar = os.getenv(varName, "false")
+    trueVals = ["true", "True", "TRUE", "T"]
+    return envVar in trueVals
+
+
 class AuthSettings(BaseModel):
     jwtAlg: str = os.getenv("JWT_ALG", "")
     jwtSecret: str = os.getenv("JWT_SECRET", "")
@@ -45,6 +51,7 @@ class BlobSettings(BaseModel):
     user: str | None = os.getenv("MINIO_ROOT_USER", "")
     password: str | None = os.getenv("MINIO_ROOT_PASSWORD", "")
     bucket: str = os.getenv("MINIO_DEFAULT_BUCKETS", "")
+    secure: bool = getBoolEnv("MINIO_SECURE")
 
 
 class Settings(BaseModel):

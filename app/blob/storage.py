@@ -13,7 +13,7 @@ def create_bucket():
         settings.blob.internal_endpoint,
         access_key=settings.blob.user,
         secret_key=settings.blob.password,
-        secure=False,
+        secure=settings.blob.secure,
     )
     found = client_internal.bucket_exists(settings.blob.bucket)
     if not found:
@@ -25,13 +25,13 @@ def upload(file_path: str, dest_folder_name: str) -> str:
         settings.blob.internal_endpoint,
         access_key=settings.blob.user,
         secret_key=settings.blob.password,
-        secure=False,
+        secure=settings.blob.secure,
     )
     client_public = Minio(
         settings.blob.public_endpoint,
         access_key=settings.blob.user,
         secret_key=settings.blob.password,
-        secure=False,
+        secure=settings.blob.secure,
     )
     _, file_extension = os.path.splitext(file_path)
     fileId = uuid4().hex
