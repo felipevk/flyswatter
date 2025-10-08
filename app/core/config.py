@@ -51,7 +51,8 @@ class BlobSettings(BaseModel):
     user: str | None = os.getenv("MINIO_ROOT_USER", "")
     password: str | None = os.getenv("MINIO_ROOT_PASSWORD", "")
     bucket: str = os.getenv("MINIO_DEFAULT_BUCKETS", "")
-    secure: bool = getBoolEnv("MINIO_SECURE")
+    internal_secure: bool = getBoolEnv("MINIO_INTERNAL_SECURE")
+    public_secure: bool = getBoolEnv("MINIO_PUBLIC_SECURE")
 
 
 class Settings(BaseModel):
