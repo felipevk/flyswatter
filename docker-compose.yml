@@ -48,6 +48,26 @@ services:
       - "9000:9000"
       - "9001:9001"
     command: server /data
+  
+  minio_create_bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    env_file: .env.docker
+    # entrypoint replaces the image's original command
+    entrypoint: >
+      /bin/sh -c '
+        set -e
+        # wait for MinIO API to accept connections
+        until mc alias set data http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+          echo "waiting for minio..."; sleep 2;
+        done
+        # idempotent bucket create (+ private by default)
+        mc mb -p data/"$MINIO_DEFAULT_BUCKETS" || true
+        # OPTIONAL: make bucket readable (remove if you want private)
+        mc anonymous set download data/"$MINIO_DEFAULT_BUCKETS" || true
+        echo "bucket ready: $MINIO_DEFAULT_BUCKETS"
+      '
 
 volumes:
   pgdata:
