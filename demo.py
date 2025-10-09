@@ -1,5 +1,7 @@
+import sys
 import time
 
+import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -14,6 +16,20 @@ from app.db.factory import (
 )
 from app.db.models import IssuePriority, IssueStatus, JobState
 from app.worker.tasks import generate_report
+
+
+def check_pdf_exists(url: str) -> bool:
+    # Ask for the file itself
+    response = requests.get(url, stream=True, timeout=10)
+    if response.status_code != 200:
+        return False
+
+    # Peek at the first 1 KB just to prove we can access it
+    for chunk in response.iter_content(1024):
+        break  # stop immediately after one chunk
+
+    response.close()
+    return True
 
 
 def seed_db():
@@ -1254,7 +1270,9 @@ def seed_db():
                     time.sleep(checkAfterSeconds)
                     continue
                 case JobState.SUCCEEDED:
-                    generatedPdfs.append(job.artifact.url)
+                    generatedPdfs.append(
+                        (check_pdf_exists(job.artifact.url), job.artifact.url)
+                    )
                     break
 
     # -----------------RESULT--------------------
@@ -1279,9 +1297,14 @@ def seed_db():
     with open(result_file, "w") as results_file:
         results_file.write(result)
         for pdf in generatedPdfs:
-            results_file.write(f"\t{pdf}\n")
+            pdfReachable = "✅" if pdf[0] else "❌"
+            results_file.write(f"\t{pdfReachable}{pdf[1]}\n")
 
     print(f"detailed results written to {result_file}")
+
+    if failedJobs or timeoutJobs:
+        print("ERROR: Executed with failed or timed out jobs")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
